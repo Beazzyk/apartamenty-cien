@@ -1,0 +1,7 @@
+{
+  "name": "Cień Ducha Gór - Apartament Premium",
+  "description": "Luksusowa strona wizytówkowa dla apartamentu z kominkiem oraz autora powieści kryminalnej w Szklarskiej Porębie.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cień Ducha Gór - Apartament Szklarska Poręba Premium</title>
+    <meta name="description" content="Luksusowy apartament z kominkiem w centrum Szklarskiej Poręby. Nocleg blisko szlaku Wysoki Kamień i PKP. Poczuj klimat powieści Cień Ducha Gór.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'warm-beige': '#FDFBF7',
+              'cappuccino': '#D2B48C',
+              'deep-brown': '#3D352F',
+              'accent-gold': '#A68A64',
+              'paper-white': '#F5F1EA'
+            },
+            fontFamily: {
+              serif: ['"Playfair Display"', 'serif'],
+              sans: ['Inter', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #FDFBF7;
+        color: #3D352F;
+      }
+      .paper-texture {
+        background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+      }
+      .scroll-reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+      }
+      .scroll-reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      /* Custom scrollbar for premium feel */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #F5F1EA;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #D2B48C;
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="paper-texture">
+    <div id="root"></div>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LodgingBusiness",
+      "name": "Apartament Cień Ducha Gór",
+      "image": "https://picsum.photos/seed/apartament1/1200/800",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "ul. Dworcowa",
+        "addressLocality": "Szklarska Poręba",
+        "addressRegion": "Dolnośląskie",
+        "postalCode": "58-580",
+        "addressCountry": "PL"
+      },
+      "description": "Luksusowy apartament 67 m² w zabytkowej willi z końca XIX wieku w Szklarskiej Porębie.",
+      "amenityFeature": [
+        "Kominek",
+        "Biblioteczka",
+        "WiFi",
+        "Parking"
+      ]
+    }
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
