@@ -5,7 +5,7 @@ const TrailRitual: React.FC = () => {
   return (
     <section className="relative py-32 overflow-hidden bg-deep-brown text-paper-white">
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
-        <img src="https://picsum.photos/seed/forest/600/1200" alt="Górska atmosfera" className="object-cover h-full" />
+        <img src="/rituals.jpeg" alt="Rituals – moment wytchnienia" className="object-cover h-full w-full" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">

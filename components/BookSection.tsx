@@ -29,16 +29,21 @@ const BookSection: React.FC = () => {
             <div className="w-20 h-1 bg-accent-gold mb-8"></div>
             
             <p className="text-2xl text-deep-brown/80 mb-8 font-light leading-relaxed italic border-l-4 border-cappuccino/20 pl-8">
-              "Hubert Litwinionek zabiera czytelnika w mroczną podróż po Szklarskiej Porębie, gdzie granica między rzeczywistością a górską legendą zaciera się nieodwracalnie."
+              "Autor książki zabiera czytelnika w mroczną podróż po Szklarskiej Porębie, gdzie granica między rzeczywistością a górską legendą zaciera się nieodwracalnie."
             </p>
             <p className="text-lg text-deep-brown/70 mb-10 leading-relaxed max-w-2xl">
-              Apartament „Cień Ducha Gór” to nie tylko nazwa – to fizyczne przedłużenie świata opisanego w powieści. Jako autor i gospodarz, zapraszam Cię do miejsca, które tętni atmosferą moich książek. W każdym egzemplarzu dostępnym w apartamencie znajdziesz dedykację, która sprawi, że Twoja lektura przy kominku stanie się jeszcze bardziej osobista.
+              Apartament „Cień Ducha Gór” to nie tylko nazwa – to fizyczne przedłużenie świata opisanego w powieści. Jako autor i gospodarz, zapraszam Cię do miejsca, które tętni atmosferą książek.
             </p>
             
             <div className="flex flex-wrap gap-6">
-              <button className="px-12 py-5 bg-deep-brown text-white rounded-full hover:bg-accent-gold transition-all duration-300 shadow-xl hover:-translate-y-1 font-medium">
+              <a
+                href="https://adrem.jgora.pl/ksiegarnia-karkonoska/cien-ducha-gor/?utm_source=ig&utm_medium=social&utm_content=link_in_bio"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-12 py-5 bg-deep-brown text-white rounded-full hover:bg-accent-gold transition-all duration-300 shadow-xl hover:-translate-y-1 font-medium"
+              >
                 Zamów książkę online
-              </button>
+              </a>
             </div>
           </div>
         </div>

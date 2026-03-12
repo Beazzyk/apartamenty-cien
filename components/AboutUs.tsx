@@ -13,8 +13,8 @@ const AboutUs: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="scroll-reveal">
             <img 
-              src="https://picsum.photos/seed/old_villa/800/800" 
-              alt="Historyczna willa Szklarska Poręba" 
+              src="/haus.png" 
+              alt="Haus Hohenzollern, historyczna willa Szklarska Poręba" 
               className="rounded-sm shadow-2xl grayscale hover:grayscale-0 transition-all duration-1000"
             />
           </div>

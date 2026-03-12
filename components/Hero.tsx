@@ -7,7 +7,7 @@ const Hero: React.FC = () => {
       {/* Background using the wide living room shot from the provided photos */}
       <div className="absolute inset-0">
         <img 
-          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920" 
+          src="/11.jpeg" 
           alt="Salon z biblioteką i kominkiem - Cień Ducha Gór" 
           className="w-full h-full object-cover scale-105 animate-[zoom_20s_infinite_alternate]"
         />

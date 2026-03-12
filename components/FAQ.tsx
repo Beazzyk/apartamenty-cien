@@ -7,8 +7,8 @@ const faqItems = [
     a: 'Tak, goście apartamentu Cień Ducha Gór mają do dyspozycji dwa dedykowane, bezpłatne miejsca parkingowe bezpośrednio przy willi.'
   },
   {
-    q: 'Czy można przyjechać z psem?',
-    a: 'Tak, jesteśmy obiektem przyjaznym zwierzętom. Prosimy jedynie o wcześniejszą informację podczas dokonywania rezerwacji.'
+    q: 'Czy można przyjechać ze zwierzakiem?',
+    a: 'Niestety nie – mimo że uwielbiamy zwierzaki, w naszym apartamencie nie możemy gościć zwierząt. Ze względu na charakter obiektu musimy zachować tę zasadę. Dziękujemy serdecznie za zrozumienie!'
   },
   {
     q: 'Jak blisko znajduje się szlak turystyczny?',

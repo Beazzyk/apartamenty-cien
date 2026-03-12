@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
@@ -68,7 +69,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-paper-white/5 pt-12 flex flex-col md:flex-row justify-between items-center text-paper-white/30 text-[10px] tracking-[0.3em] uppercase">
           <p>© {new Date().getFullYear()} Cień Ducha Gór. Wszystkie prawa zastrzeżone.</p>
           <div className="mt-4 md:mt-0 space-x-8">
-            <a href="#" className="hover:text-white transition-colors">Regulamin</a>
+            <Link to="/regulamin" className="hover:text-white transition-colors">Regulamin</Link>
             <a href="#" className="hover:text-white transition-colors">Polityka Prywatności</a>
           </div>
         </div>

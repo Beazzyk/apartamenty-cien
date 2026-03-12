@@ -39,13 +39,13 @@ const Location: React.FC = () => {
 
           <div className="w-full lg:w-1/2 h-[500px] relative scroll-reveal rounded-lg overflow-hidden shadow-2xl border-4 border-white">
             <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2516.485123456789!2d15.523456789012345!3d50.823456789012345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470ec12345678901%3A0x1234567890123456!2sDworcowa%2C%2058-580%20Szklarska%20Por%C4%99ba!5e0!3m2!1spl!2spl!4v1234567890123" 
+                src="https://www.google.com/maps?q=50.831846,15.518896&hl=pl&z=19&output=embed" 
                 width="100%" 
                 height="100%" 
                 style={{ border: 0 }} 
                 allowFullScreen={true} 
                 loading="lazy"
-                title="Mapa lokalizacji"
+                title="Mapa lokalizacji - Apartament Cień Ducha Gór, ul. Dworcowa, Szklarska Poręba"
             ></iframe>
           </div>
         </div>

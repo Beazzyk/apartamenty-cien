@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const Categories = [
@@ -8,16 +7,23 @@ const Categories = [
   },
   {
     name: 'Kuchnia',
-    items: ['Ekspres do kawy', 'Piekarnik', 'Lodówka', 'Czajnik', 'Płyta kuchenna', 'Zmywarka', 'Przybory kuchenne', 'Zestaw powitalny']
+    items: ['Ekspres do kawy', 'Piekarnik', 'Lodówka', 'Czajnik', 'Płyta kuchenna', 'Zmywarka', 'Przybory kuchenne']
   },
   {
     name: 'Łazienka',
-    items: ['Prysznic', 'Pralka', 'Suszarka do włosów', 'Ręczniki premium', 'Kosmetyki Rituals', 'Mata łazienkowa']
+    items: ['Prysznic', 'Pralka', 'Suszarka do włosów', 'Ręczniki premium', 'Kosmetyki Rituals', 'Suszarka do prania']
   },
   {
     name: 'Sypialnie',
     items: ['2 niezależne sypialnie', 'Przestronne szafy', 'Pościel satynowa', 'Lampki do czytania', 'Wygodne materace']
   }
+];
+
+const Masaze = [
+  { name: 'Masaż relaksacyjny', options: ['60 min – 160 zł', '90 min – 220 zł', '+ peeling 30 zł'] },
+  { name: 'Masaż klasyczny', options: ['60 min – 180 zł', '90 min – 250 zł'] },
+  { name: 'Masaż twarzy z peelingiem, gorącymi ręcznikami i maską', options: ['60 min – 230 zł', '90 min – 290 zł'] },
+  { name: 'Masaż refleksologiczny stóp/dłoni/twarzy z peelingiem i maską', options: ['60 min – 230 zł', '90 min – 290 zł'] }
 ];
 
 const Amenities: React.FC = () => {
@@ -40,6 +46,27 @@ const Amenities: React.FC = () => {
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="mt-20 pt-16 border-t border-cappuccino/20 scroll-reveal">
+          <p className="text-center text-deep-brown/70 font-light mb-10">Możliwość zamówienia masażu w apartamencie</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+            {Masaze.map((m, idx) => (
+              <div key={idx} className="flex flex-col">
+                <div className="min-h-[4.5rem] flex flex-col justify-end border-b border-cappuccino/30 pb-2 mb-3">
+                  <h3 className="font-serif text-lg text-accent-gold leading-tight">{m.name}</h3>
+                </div>
+                <ul className="space-y-2">
+                  {m.options.map((opt, i) => (
+                    <li key={i} className="flex items-center text-deep-brown/80 font-light text-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cappuccino mr-2.5 flex-shrink-0" />
+                      {opt}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

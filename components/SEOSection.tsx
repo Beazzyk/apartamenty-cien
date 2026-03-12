@@ -18,7 +18,7 @@ const SEOSection: React.FC = () => {
             Lokalizacja przy ulicy Dworcowej gwarantuje spokój, będąc jednocześnie punktem wyjścia dla najważniejszych atrakcji. Wybierając nasz <strong>apartament z kominkiem Szklarska Poręba</strong>, zyskujesz bezpośredni dostęp do przyrody – jesteśmy położeni zaledwie 130 metrów od <strong>szlaku na Wysoki Kamień</strong>.
           </p>
           <p className="mb-6">
-            Goście podróżujący koleją docenią fakt, że oferujemy komfortowy <strong>nocleg blisko PKP Szklarska Poręba</strong> (tylko 200m), co czyni naszą bazę idealną dla osób szukających wygody bez konieczności używania samochodu. To doskonały wybór na <strong>apartament Karkonosze</strong>, z którego w kilka minut dotrzesz do tętniącej życiem głównej ulicy, a po dniu pełnym wrażeń odpoczniesz przy cieple prawdziwego kominka.
+            Goście podróżujący koleją docenią fakt, że oferujemy komfortowy <strong>nocleg blisko PKP Szklarska Poręba</strong> (tylko 200m), co czyni naszą bazę idealną dla osób szukających wygody bez konieczności używania samochodu. To doskonały wybór na <strong>apartament w Karkonoszach</strong>, z którego w kilka chwil dotrzesz do tętniącej życiem głównej ulicy, a po dniu pełnym wrażeń odpoczniesz przy cieple prawdziwego kominka.
           </p>
         </div>
       </div>
