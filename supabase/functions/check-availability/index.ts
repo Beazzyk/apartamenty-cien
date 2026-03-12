@@ -19,12 +19,19 @@ Deno.serve(async (req) => {
     }
 
     // Run DB queries and fresh iCal fetch concurrently
-    const [bookingsResult, blockedResult, icalDates, priceResult] =
+    const [pendingResult, confirmedResult, blockedResult, icalDates, priceResult] =
       await Promise.all([
         supabaseAdmin
           .from("bookings")
           .select("check_in, check_out")
-          .in("status", ["pending", "confirmed"])
+          .eq("status", "pending")
+          .lte("check_in", to)
+          .gte("check_out", from),
+
+        supabaseAdmin
+          .from("bookings")
+          .select("check_in, check_out")
+          .eq("status", "confirmed")
           .lte("check_in", to)
           .gte("check_out", from),
 
@@ -43,24 +50,37 @@ Deno.serve(async (req) => {
           .single(),
       ]);
 
-    const unavailable = new Set<string>();
+    const pendingSet   = new Set<string>();
+    const confirmedSet = new Set<string>();
+    const blockedSet   = new Set<string>();
 
-    for (const b of bookingsResult.data ?? []) {
+    for (const b of pendingResult.data ?? []) {
       for (const d of expandDateRange(b.check_in, b.check_out)) {
-        if (d >= from && d <= to) unavailable.add(d);
+        if (d >= from && d <= to) pendingSet.add(d);
+      }
+    }
+
+    for (const b of confirmedResult.data ?? []) {
+      for (const d of expandDateRange(b.check_in, b.check_out)) {
+        if (d >= from && d <= to) {
+          confirmedSet.add(d);
+          pendingSet.delete(d); // confirmed takes priority
+        }
       }
     }
 
     for (const b of blockedResult.data ?? []) {
-      unavailable.add(b.date);
+      blockedSet.add(b.date);
     }
 
     for (const d of icalDates) {
-      unavailable.add(d);
+      blockedSet.add(d);
     }
 
     return jsonResponse({
-      unavailable_dates: [...unavailable].sort(),
+      pending_dates:   [...pendingSet].sort(),
+      confirmed_dates: [...confirmedSet].sort(),
+      blocked_dates:   [...blockedSet].sort(),
       price_per_night: parseInt(priceResult.data?.value ?? "450"),
     });
   } catch (error) {

@@ -11,7 +11,9 @@ function isConfigured(): boolean {
 }
 
 export interface AvailabilityResponse {
-  unavailable_dates: string[];
+  pending_dates: string[];
+  confirmed_dates: string[];
+  blocked_dates: string[];
   price_per_night: number;
 }
 

@@ -89,6 +89,39 @@
   cursor: default;
 }
 
+/* Available days — subtle green tint */
+.calendar-wrapper .day-available:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
+  background-color: rgba(52, 211, 153, 0.13);
+  color: #166534;
+}
+.calendar-wrapper .day-available:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button:hover {
+  background-color: rgba(52, 211, 153, 0.25);
+}
+
+/* Pending days — yellow/orange (awaiting confirmation) */
+.calendar-wrapper .day-pending.rdp-disabled .rdp-day_button {
+  background-color: rgba(245, 158, 11, 0.55);
+  color: #78350f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Confirmed days — red (booked) */
+.calendar-wrapper .day-confirmed.rdp-disabled .rdp-day_button {
+  background-color: rgba(239, 68, 68, 0.55);
+  color: #7f1d1d;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Blocked days (Booking.com) — same as confirmed */
+.calendar-wrapper .day-blocked.rdp-disabled .rdp-day_button {
+  background-color: rgba(239, 68, 68, 0.5);
+  color: #7f1d1d;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .calendar-wrapper .rdp-button_previous,
 .calendar-wrapper .rdp-button_next {
   color: #3D352F;

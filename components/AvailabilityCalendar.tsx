@@ -23,13 +23,21 @@ function parseDate(s: string): Date {
   return new Date(y, m - 1, d);
 }
 
+function sameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
 const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChange, onPriceUpdate }) => {
   const today = useRef((() => { const d = new Date(); d.setHours(0,0,0,0); return d; })());
 
-  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pricePerNight, setPricePerNight] = useState(450);
-  const [displayMonth, setDisplayMonth] = useState(today.current);
+  const [pendingDates, setPendingDates]     = useState<Date[]>([]);
+  const [confirmedDates, setConfirmedDates] = useState<Date[]>([]);
+  const [blockedDates, setBlockedDates]     = useState<Date[]>([]);
+  const [loading, setLoading]               = useState(false);
+  const [pricePerNight, setPricePerNight]   = useState(450);
+  const [displayMonth, setDisplayMonth]     = useState(today.current);
 
   const fetchData = useCallback(async (month: Date) => {
     setLoading(true);
@@ -41,7 +49,9 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
       const to = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
       const data = await checkAvailability(from, to);
-      setUnavailableDates(data.unavailable_dates.map(parseDate));
+      setPendingDates(data.pending_dates.map(parseDate));
+      setConfirmedDates(data.confirmed_dates.map(parseDate));
+      setBlockedDates(data.blocked_dates.map(parseDate));
       setPricePerNight(data.price_per_night);
       onPriceUpdate(data.price_per_night);
     } catch {
@@ -54,6 +64,8 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
   useEffect(() => {
     fetchData(displayMonth);
   }, [displayMonth, fetchData]);
+
+  const allUnavailable = [...pendingDates, ...confirmedDates, ...blockedDates];
 
   const selected: DateRange | undefined =
     checkIn ? { from: parseDate(checkIn), to: checkOut ? parseDate(checkOut) : undefined } : undefined;
@@ -68,6 +80,22 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
         range.to ? toDateStr(range.to) : null,
       );
     }
+  };
+
+  const modifiers = {
+    pending:   (day: Date) => pendingDates.some(d => sameDay(d, day)),
+    confirmed: (day: Date) => confirmedDates.some(d => sameDay(d, day)),
+    blocked:   (day: Date) => blockedDates.some(d => sameDay(d, day)),
+    available: (day: Date) =>
+      day >= today.current &&
+      !allUnavailable.some(d => sameDay(d, day)),
+  };
+
+  const modifiersClassNames = {
+    pending:   'day-pending',
+    confirmed: 'day-confirmed',
+    blocked:   'day-blocked',
+    available: 'day-available',
   };
 
   return (
@@ -86,22 +114,30 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
         onMonthChange={setDisplayMonth}
         disabled={[
           { before: today.current },
-          ...unavailableDates.map(d => d),
+          ...allUnavailable,
         ]}
+        modifiers={modifiers}
+        modifiersClassNames={modifiersClassNames}
         fixedWeeks
         showOutsideDays
         startMonth={today.current}
       />
       <div className="flex items-center justify-between mt-2 px-1 text-[10px] text-deep-brown/50 uppercase tracking-wider">
-        <span className="flex items-center gap-4">
+        <span className="flex items-center gap-3 flex-wrap">
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-sm bg-accent-gold inline-block" /> Wybrany
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-deep-brown/10 inline-block" /> Zajęty
+            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400/70 inline-block" /> Wolny
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400/80 inline-block" /> Oczekuje
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-red-400/80 inline-block" /> Zarezerwowany
           </span>
         </span>
-        <span>{pricePerNight} PLN/noc</span>
+        <span className="shrink-0">{pricePerNight} PLN/noc</span>
       </div>
     </div>
   );
