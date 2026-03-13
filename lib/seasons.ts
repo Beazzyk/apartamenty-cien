@@ -54,10 +54,10 @@ function isHolidayDate(date: string): boolean {
   if (m === 4 && d === 30) return true;
   if (m === 5 && d <= 4) return true;
 
-  // Easter: Maundy Thursday (−3) to Easter Monday (+1)
+  // Easter: Wednesday before (−4) to Tuesday after (+2)
   const easter = EASTER_SUNDAYS[y];
   if (easter) {
-    for (let offset = -3; offset <= 1; offset++) {
+    for (let offset = -4; offset <= 2; offset++) {
       if (addDaysUTC(easter, offset) === date) return true;
     }
   }

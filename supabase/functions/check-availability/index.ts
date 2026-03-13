@@ -6,6 +6,13 @@ import {
 } from "../_shared/cors.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
 
+/** Normalize DB date (YYYY-MM-DD or ISO string) to YYYY-MM-DD for consistent API response. */
+function toDateOnly(s: string | null | undefined): string {
+  if (!s || typeof s !== "string") return "";
+  const i = s.indexOf("T");
+  return i >= 0 ? s.slice(0, i) : s;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
@@ -55,29 +62,34 @@ Deno.serve(async (req) => {
     const blockedSet   = new Set<string>();
 
     for (const b of pendingResult.data ?? []) {
-      // Block all nights + check_out day (cleaning day)
-      for (const d of expandDateRange(b.check_in, b.check_out)) {
+      const ci = toDateOnly(b.check_in);
+      const co = toDateOnly(b.check_out);
+      if (!ci || !co) continue;
+      for (const d of expandDateRange(ci, co)) {
         if (d >= from && d <= to) pendingSet.add(d);
       }
-      if (b.check_out >= from && b.check_out <= to) pendingSet.add(b.check_out);
+      if (co >= from && co <= to) pendingSet.add(co);
     }
 
     for (const b of confirmedResult.data ?? []) {
-      // Block all nights + check_out day (cleaning day)
-      for (const d of expandDateRange(b.check_in, b.check_out)) {
+      const ci = toDateOnly(b.check_in);
+      const co = toDateOnly(b.check_out);
+      if (!ci || !co) continue;
+      for (const d of expandDateRange(ci, co)) {
         if (d >= from && d <= to) {
           confirmedSet.add(d);
           pendingSet.delete(d); // confirmed takes priority
         }
       }
-      if (b.check_out >= from && b.check_out <= to) {
-        confirmedSet.add(b.check_out);
-        pendingSet.delete(b.check_out);
+      if (co >= from && co <= to) {
+        confirmedSet.add(co);
+        pendingSet.delete(co);
       }
     }
 
     for (const b of blockedResult.data ?? []) {
-      blockedSet.add(b.date);
+      const d = toDateOnly(b.date);
+      if (d) blockedSet.add(d);
     }
 
     for (const d of icalDates) {

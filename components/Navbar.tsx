@@ -103,7 +103,8 @@ const Navbar: React.FC = () => {
   const currentLang = LANGUAGES.find((l) => l.code === lang)!;
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-md py-3 md:py-4' : 'bg-transparent py-3 md:py-4'}`}>
+    <>
+    <nav className={`fixed top-0 left-0 w-full z-[60] transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-md py-3 md:py-4' : 'bg-transparent py-3 md:py-4'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center h-12 md:h-14">
         <a
           href="#"
@@ -185,10 +186,12 @@ const Navbar: React.FC = () => {
           )}
         </button>
       </div>
+    </nav>
 
-      {/* Menu mobilne */}
+      {/* Menu mobilne – poza <nav>, pełny ekran pod paskiem, zawsze na brązowym tle */}
       <div
-        className={`md:hidden fixed inset-0 top-12 md:top-14 z-40 bg-deep-brown transition-opacity duration-300 border-t-2 border-accent-gold/60 shadow-[0_-4px_24px_rgba(0,0,0,0.3)] ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`md:hidden fixed left-0 right-0 bottom-0 z-[50] bg-deep-brown transition-opacity duration-300 border-t-2 border-accent-gold/60 shadow-[0_-4px_24px_rgba(0,0,0,0.3)] overflow-y-auto ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        style={{ top: '3rem', minHeight: 'calc(100vh - 3rem)' }}
         aria-hidden={!isMenuOpen}
       >
         <div className="container mx-auto px-6 py-8 flex flex-col gap-1 border-x-2 border-accent-gold/30 min-h-full">
@@ -249,7 +252,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 };
 
