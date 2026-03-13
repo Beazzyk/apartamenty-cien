@@ -69,6 +69,7 @@ const LANGUAGES: { code: Lang; label: string }[] = [
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const { lang, setLang, t } = useTranslation();
 
@@ -88,6 +89,16 @@ const Navbar: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Blokuj przewijanie body gdy menu mobilne jest otwarte
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMenuOpen]);
 
   const currentLang = LANGUAGES.find((l) => l.code === lang)!;
 
@@ -156,11 +167,87 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        <button className={`${isScrolled ? 'text-deep-brown' : 'text-white'} md:hidden`} aria-label="Menu">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-          </svg>
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen((o) => !o)}
+          className={`md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] -m-2 rounded-lg active:bg-white/10 touch-manipulation ${isScrolled ? 'text-deep-brown' : 'text-white'}`}
+          aria-label={isMenuOpen ? 'Zamknij menu' : 'Otwórz menu'}
+          aria-expanded={isMenuOpen}
+        >
+          {isMenuOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
         </button>
+      </div>
+
+      {/* Menu mobilne */}
+      <div
+        className={`md:hidden fixed inset-0 top-12 md:top-14 z-40 bg-deep-brown transition-opacity duration-300 border-t-2 border-accent-gold/60 shadow-[0_-4px_24px_rgba(0,0,0,0.3)] ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        aria-hidden={!isMenuOpen}
+      >
+        <div className="container mx-auto px-6 py-8 flex flex-col gap-1 border-x-2 border-accent-gold/30 min-h-full">
+          <a
+            href="#apartament"
+            onClick={() => setIsMenuOpen(false)}
+            className="py-4 px-4 text-white hover:text-accent-gold transition-colors text-lg uppercase tracking-widest font-medium border-b border-white/10 active:bg-white/5 rounded-lg min-h-[48px] flex items-center touch-manipulation"
+          >
+            {t.navbar.apartament}
+          </a>
+          <a
+            href="#lokalizacja"
+            onClick={() => setIsMenuOpen(false)}
+            className="py-4 px-4 text-white hover:text-accent-gold transition-colors text-lg uppercase tracking-widest font-medium border-b border-white/10 active:bg-white/5 rounded-lg min-h-[48px] flex items-center touch-manipulation"
+          >
+            {t.navbar.lokalizacja}
+          </a>
+          <a
+            href="#ksiazka"
+            onClick={() => setIsMenuOpen(false)}
+            className="py-4 px-4 text-white hover:text-accent-gold transition-colors text-lg uppercase tracking-widest font-medium border-b border-white/10 active:bg-white/5 rounded-lg min-h-[48px] flex items-center touch-manipulation"
+          >
+            {t.navbar.ksiazka}
+          </a>
+          <Link
+            to="/regulamin"
+            onClick={() => setIsMenuOpen(false)}
+            className="py-4 px-4 text-white hover:text-accent-gold transition-colors text-lg uppercase tracking-widest font-medium border-b border-white/10 active:bg-white/5 rounded-lg min-h-[48px] flex items-center touch-manipulation"
+          >
+            {t.navbar.regulamin}
+          </Link>
+          <a
+            href="#rezerwacja"
+            onClick={() => setIsMenuOpen(false)}
+            className="mt-4 py-4 px-6 text-center bg-accent-gold text-deep-brown font-semibold rounded-full hover:bg-amber-400 transition-colors text-lg uppercase tracking-widest min-h-[48px] flex items-center justify-center touch-manipulation"
+          >
+            {t.navbar.rezerwuj}
+          </a>
+          <div className="mt-6 pt-6 border-t border-white/20">
+            <p className="text-white/70 text-sm uppercase tracking-widest mb-3">{currentLang.label}</p>
+            <div className="flex flex-wrap gap-2">
+              {LANGUAGES.map(({ code, label }) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => { setLang(code); }}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-full border text-sm font-medium min-h-[44px] touch-manipulation ${
+                    lang === code
+                      ? 'bg-accent-gold/20 border-accent-gold text-accent-gold'
+                      : 'border-white/30 text-white hover:bg-white/10'
+                  }`}
+                >
+                  <FlagIcon code={code} className="w-5 h-5" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
   );

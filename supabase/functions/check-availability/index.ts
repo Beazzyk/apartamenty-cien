@@ -55,17 +55,24 @@ Deno.serve(async (req) => {
     const blockedSet   = new Set<string>();
 
     for (const b of pendingResult.data ?? []) {
+      // Block all nights + check_out day (cleaning day)
       for (const d of expandDateRange(b.check_in, b.check_out)) {
         if (d >= from && d <= to) pendingSet.add(d);
       }
+      if (b.check_out >= from && b.check_out <= to) pendingSet.add(b.check_out);
     }
 
     for (const b of confirmedResult.data ?? []) {
+      // Block all nights + check_out day (cleaning day)
       for (const d of expandDateRange(b.check_in, b.check_out)) {
         if (d >= from && d <= to) {
           confirmedSet.add(d);
           pendingSet.delete(d); // confirmed takes priority
         }
+      }
+      if (b.check_out >= from && b.check_out <= to) {
+        confirmedSet.add(b.check_out);
+        pendingSet.delete(b.check_out);
       }
     }
 
