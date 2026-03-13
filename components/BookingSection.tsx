@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { createBooking } from '../lib/api';
 import { useTranslation } from '../context/LanguageContext';
+import { getSeasonConfig, nightsPL, type SeasonConfig } from '../lib/seasons';
 
 type BookingStatus = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -29,10 +30,15 @@ const BookingSection: React.FC = () => {
     ? Math.ceil((new Date(checkOut + 'T00:00:00').getTime() - new Date(checkIn + 'T00:00:00').getTime()) / 86_400_000)
     : 0;
 
-  const totalPrice = nights * pricePerNight;
+  const seasonConfig: SeasonConfig | null = checkIn && checkOut ? getSeasonConfig(checkIn, checkOut) : null;
+  const effectivePrice = seasonConfig ? seasonConfig.pricePerNight : pricePerNight;
+  const minNights = seasonConfig ? seasonConfig.minNights : 2;
+  const meetsMinNights = nights === 0 || nights >= minNights;
+
+  const totalPrice = nights * effectivePrice;
 
   const canSubmit =
-    checkIn && checkOut && nights > 0 && guestName.trim() && guestEmail.trim() && status !== 'submitting';
+    checkIn && checkOut && nights >= minNights && guestName.trim() && guestEmail.trim() && status !== 'submitting';
 
   const guestLabel = (n: number) =>
     n === 1 ? `1 ${b.person1}` : n < 5 ? `${n} ${b.person234}` : `${n} ${b.person5}`;
@@ -223,10 +229,34 @@ const BookingSection: React.FC = () => {
 
                 {nights > 0 && (
                   <div className="bg-white rounded-xl p-5 border border-cappuccino/10">
+                    {/* Season badge */}
+                    {seasonConfig && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                          seasonConfig.season === 'holiday' ? 'bg-red-100 text-red-700' :
+                          seasonConfig.season === 'peak'    ? 'bg-amber-100 text-amber-700' :
+                          'bg-emerald-100 text-emerald-700'
+                        }`}>
+                          {seasonConfig.label}
+                        </span>
+                        <span className="text-[11px] text-deep-brown/50">
+                          min. {seasonConfig.minNights} {nightsPL(seasonConfig.minNights)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm text-deep-brown/60">
-                      <span>{pricePerNight} PLN × {nights} {nightLabel(nights)}</span>
+                      <span>{effectivePrice} PLN × {nights} {nightLabel(nights)}</span>
                       <span>{totalPrice} PLN</span>
                     </div>
+                    {/* Minimum nights warning */}
+                    {!meetsMinNights && (
+                      <div className="mt-3 flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                        </svg>
+                        Wybrany termin wymaga minimum {minNights} {nightsPL(minNights)}
+                      </div>
+                    )}
                     <div className="flex justify-between items-end pt-3 mt-3 border-t border-cappuccino/20">
                       <span className="text-xs uppercase tracking-wide text-deep-brown/50">{b.estimate}</span>
                       <span className="text-3xl font-serif text-deep-brown">{totalPrice} PLN</span>
@@ -237,7 +267,10 @@ const BookingSection: React.FC = () => {
                 <div className="pt-6">
                   <div className="flex justify-between items-end mb-6">
                     <span className="text-sm text-deep-brown/60 uppercase tracking-wide">{b.priceFrom}</span>
-                    <span className="text-3xl font-serif text-deep-brown">{pricePerNight} PLN <span className="text-sm font-sans font-light">{b.perNight}</span></span>
+                    <span className="text-3xl font-serif text-deep-brown">
+                      {effectivePrice} PLN{' '}
+                      <span className="text-sm font-sans font-light">{b.perNight}</span>
+                    </span>
                   </div>
 
                   {status === 'error' && errorMsg && (

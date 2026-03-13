@@ -19,7 +19,8 @@ function toDateStr(d: Date): string {
 }
 
 function parseDate(s: string): Date {
-  const [y, m, d] = s.split('-').map(Number);
+  const dateOnly = s.includes('T') ? s.slice(0, 10) : s;
+  const [y, m, d] = dateOnly.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
@@ -137,7 +138,7 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
             <span className="w-2.5 h-2.5 rounded-sm bg-red-400/80 inline-block" /> Zarezerwowany
           </span>
         </span>
-        <span className="shrink-0 text-right sm:text-left">{pricePerNight} PLN/noc</span>
+        <span className="shrink-0 text-right sm:text-left">od {pricePerNight} PLN/noc</span>
       </div>
     </div>
   );

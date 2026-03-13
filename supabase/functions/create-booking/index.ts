@@ -2,6 +2,7 @@ import { supabaseAdmin } from "../_shared/supabase.ts";
 import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
+import { getSeasonConfig } from "../_shared/seasons.ts";
 
 // ── Escape HTML — prevents XSS in email templates ────────────────────────────
 function esc(s: unknown): string {
@@ -103,22 +104,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- Calculate price ---
+    // --- Season: validate minimum nights and calculate price ---
     const nights = Math.ceil(
       (checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000,
     );
 
-    const { data: priceSetting } = await supabaseAdmin
-      .from("settings")
-      .select("value")
-      .eq("key", "price_per_night")
-      .single();
+    const season = getSeasonConfig(check_in, check_out);
 
-    const pricePerNight = parseInt(priceSetting?.value ?? "450", 10);
-    if (isNaN(pricePerNight) || pricePerNight < 100 || pricePerNight > 10_000) {
-      await log("error", "booking", "Invalid price_per_night setting", { value: priceSetting?.value });
-      return errorResponse("Błąd konfiguracji cennika. Skontaktuj się bezpośrednio.", 500);
+    if (nights < season.minNights) {
+      return errorResponse(
+        `Dla wybranego terminu (${season.season === "holiday" ? "święta/sylwester" : season.season === "peak" ? "sezon" : "poza sezonem"}) wymagane są minimum ${season.minNights} ${season.minNights < 5 ? "noce" : "nocy"}.`,
+        400,
+      );
     }
+
+    const pricePerNight = season.pricePerNight;
     const estimatedPrice = nights * pricePerNight;
 
     // --- Insert booking — fetch management_token too ---
