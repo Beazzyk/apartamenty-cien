@@ -131,7 +131,7 @@ const BookingSection: React.FC = () => {
           <div className="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] rounded-2xl overflow-hidden border border-cappuccino/20 flex flex-col lg:flex-row">
 
             {/* Left: Calendar + dates */}
-            <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 scroll-reveal">
+            <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 scroll-reveal active">
               <h2 className="font-serif text-3xl sm:text-4xl text-deep-brown mb-4">{b.heading}</h2>
               <p className="text-deep-brown/60 mb-8 sm:mb-10 uppercase tracking-widest text-xs">{b.directLabel}</p>
 
@@ -177,7 +177,7 @@ const BookingSection: React.FC = () => {
             </div>
 
             {/* Right: Form */}
-            <div className="w-full lg:w-1/2 bg-warm-beige/50 p-6 sm:p-10 lg:p-16 border-t lg:border-t-0 lg:border-l border-cappuccino/10 scroll-reveal">
+            <div className="w-full lg:w-1/2 bg-warm-beige/50 p-6 sm:p-10 lg:p-16 border-t lg:border-t-0 lg:border-l border-cappuccino/10 scroll-reveal active">
               <form className="space-y-8" onSubmit={handleSubmit}>
                 <div className="flex flex-col space-y-2">
                   <label className="text-xs uppercase font-semibold text-accent-gold">{b.guestsLabel}</label>
@@ -292,7 +292,7 @@ const BookingSection: React.FC = () => {
           </div>
 
           {/* Row 2: Info cards */}
-          <div className="mt-10 bg-warm-beige rounded-2xl p-12 lg:p-16 border border-cappuccino/10 scroll-reveal">
+          <div className="mt-10 bg-warm-beige rounded-2xl p-12 lg:p-16 border border-cappuccino/10 scroll-reveal active">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               <div className="flex space-x-6">
                 <div className="flex-shrink-0 w-12 h-12 bg-white rounded-full flex items-center justify-center text-accent-gold shadow-md">
