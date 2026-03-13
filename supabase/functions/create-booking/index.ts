@@ -3,6 +3,16 @@ import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
 
+// ── Escape HTML — prevents XSS in email templates ────────────────────────────
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const FUNCTIONS_URL = Deno.env.get("SUPABASE_URL")
   ? `${Deno.env.get("SUPABASE_URL")}/functions/v1`
   : "";
@@ -19,21 +29,60 @@ Deno.serve(async (req) => {
       return errorResponse("Wymagane pola: imię, e-mail, data przyjazdu, data wyjazdu", 400);
     }
 
+    // Length limits (M-1)
+    if (guest_name.trim().length > 200) {
+      return errorResponse("Imię i nazwisko jest zbyt długie.", 400);
+    }
+    if (guest_email.trim().length > 254) {
+      return errorResponse("Adres e-mail jest zbyt długi.", 400);
+    }
+    if (guest_phone && guest_phone.length > 30) {
+      return errorResponse("Numer telefonu jest zbyt długi.", 400);
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(guest_email)) {
       return errorResponse("Nieprawidłowy adres e-mail", 400);
     }
 
-    const checkInDate = new Date(check_in + "T00:00:00Z");
+    // Phone format (L-3)
+    const phoneRegex = /^\+?[\d\s\-(). ]{7,20}$/;
+    if (guest_phone?.trim() && !phoneRegex.test(guest_phone.trim())) {
+      return errorResponse("Nieprawidłowy format numeru telefonu.", 400);
+    }
+
+    const checkInDate  = new Date(check_in  + "T00:00:00Z");
     const checkOutDate = new Date(check_out + "T00:00:00Z");
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+      return errorResponse("Nieprawidłowy format daty.", 400);
+    }
     if (checkOutDate <= checkInDate) {
       return errorResponse("Data wyjazdu musi być po dacie przyjazdu", 400);
     }
     if (checkInDate < today) {
       return errorResponse("Nie można rezerwować dat z przeszłości", 400);
+    }
+
+    // Max 2 years in future (M-1)
+    const maxFuture = new Date();
+    maxFuture.setFullYear(maxFuture.getFullYear() + 2);
+    if (checkInDate > maxFuture) {
+      return errorResponse("Data przyjazdu nie może być odleglejsza niż 2 lata.", 400);
+    }
+
+    // Rate limiting: max 3 pending bookings per email per 24h (H-2)
+    const oneDayAgo = new Date(Date.now() - 86_400_000).toISOString();
+    const { count: pendingCount } = await supabaseAdmin
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("guest_email", guest_email.trim().toLowerCase())
+      .eq("status", "pending")
+      .gte("created_at", oneDayAgo);
+    if ((pendingCount ?? 0) >= 3) {
+      return errorResponse("Zbyt wiele zapytań z tego adresu e-mail. Spróbuj ponownie po 24 godzinach.", 429);
     }
 
     const guestCount = Math.min(Math.max(parseInt(guests_count) || 2, 1), 6);
@@ -65,7 +114,11 @@ Deno.serve(async (req) => {
       .eq("key", "price_per_night")
       .single();
 
-    const pricePerNight = parseInt(priceSetting?.value ?? "450");
+    const pricePerNight = parseInt(priceSetting?.value ?? "450", 10);
+    if (isNaN(pricePerNight) || pricePerNight < 100 || pricePerNight > 10_000) {
+      await log("error", "booking", "Invalid price_per_night setting", { value: priceSetting?.value });
+      return errorResponse("Błąd konfiguracji cennika. Skontaktuj się bezpośrednio.", 500);
+    }
     const estimatedPrice = nights * pricePerNight;
 
     // --- Insert booking — fetch management_token too ---
@@ -150,7 +203,19 @@ async function sendNotifications(data: NotificationData): Promise<void> {
   }
 
   const nightsLabel = data.nights === 1 ? "noc" : data.nights < 5 ? "noce" : "nocy";
-  const phoneText = data.guestPhone || "nie podano";
+  const phoneText   = data.guestPhone || "nie podano";
+
+  // Escape all user-supplied fields before HTML insertion (H-4)
+  const safeName   = esc(data.guestName);
+  const safeEmail  = esc(data.guestEmail);
+  const safePhone  = esc(phoneText);
+  const safeIn     = esc(data.checkIn);
+  const safeOut    = esc(data.checkOut);
+  const safeNights = esc(data.nights);
+  const safeNLabel = esc(nightsLabel);
+  const safeGuests = esc(data.guestsCount);
+  const safePrice  = esc(data.estimatedPrice);
+  const safeId     = esc(data.bookingId);
 
   const confirmUrl = `${FUNCTIONS_URL}/manage-booking?action=confirm&token=${data.managementToken}`;
   const cancelUrl  = `${FUNCTIONS_URL}/manage-booking?action=cancel&token=${data.managementToken}`;
@@ -159,7 +224,7 @@ async function sendNotifications(data: NotificationData): Promise<void> {
   if (ownerEmail) {
     const ownerHtml = `
 <div style="font-family:Georgia,serif;max-width:620px;margin:0 auto;background:#FDFBF7;padding:40px;border-radius:12px;border:1px solid #D2B48C;">
-  <h1 style="color:#3D352F;font-size:22px;margin:0 0 4px;">🔔 Nowe zapytanie o rezerwację</h1>
+  <h1 style="color:#3D352F;font-size:22px;margin:0 0 4px;">Nowe zapytanie o rezerwację</h1>
   <p style="color:#A68A64;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 24px;">Apartament Cień Ducha Gór</p>
   <hr style="border:none;border-top:1px solid #D2B48C;margin:0 0 24px;">
 
@@ -169,38 +234,38 @@ async function sendNotifications(data: NotificationData): Promise<void> {
     </tr>
     <tr>
       <td style="padding:8px 12px;color:#666;">Przyjazd</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${data.checkIn}</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safeIn}</td>
     </tr>
     <tr style="background:#FDFBF7;">
       <td style="padding:8px 12px;color:#666;">Wyjazd</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${data.checkOut}</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safeOut}</td>
     </tr>
     <tr>
       <td style="padding:8px 12px;color:#666;">Liczba nocy</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${data.nights} ${nightsLabel}</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safeNights} ${safeNLabel}</td>
     </tr>
     <tr style="background:#FDFBF7;">
       <td style="padding:8px 12px;color:#666;">Goście</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${data.guestsCount}</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safeGuests}</td>
     </tr>
     <tr>
       <td style="padding:8px 12px;color:#666;">Szac. cena</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#A68A64;font-size:16px;">${data.estimatedPrice} PLN</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#A68A64;font-size:16px;">${safePrice} PLN</td>
     </tr>
     <tr style="background:#F5F0E8;">
       <td colspan="2" style="padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#A68A64;font-weight:bold;">Dane gościa</td>
     </tr>
     <tr style="background:#FDFBF7;">
       <td style="padding:8px 12px;color:#666;">Imię i nazwisko</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${data.guestName}</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safeName}</td>
     </tr>
     <tr>
       <td style="padding:8px 12px;color:#666;">E-mail</td>
-      <td style="padding:8px 12px;"><a href="mailto:${data.guestEmail}" style="color:#A68A64;font-weight:bold;">${data.guestEmail}</a></td>
+      <td style="padding:8px 12px;"><a href="mailto:${safeEmail}" style="color:#A68A64;font-weight:bold;">${safeEmail}</a></td>
     </tr>
     <tr style="background:#FDFBF7;">
       <td style="padding:8px 12px;color:#666;">Telefon</td>
-      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${phoneText}</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safePhone}</td>
     </tr>
   </table>
 
@@ -228,11 +293,11 @@ async function sendNotifications(data: NotificationData): Promise<void> {
   </table>
 
   <p style="color:#999;font-size:11px;text-align:center;margin:16px 0 0;">
-    Każdy przycisk działa tylko raz. Kliknięcie otworzy stronę potwierdzenia.
+    Kliknięcie przycisku otworzy stronę potwierdzenia — akcja wymaga dodatkowego kliknięcia.
   </p>
 
   <hr style="border:none;border-top:1px solid #D2B48C;margin:24px 0 16px;">
-  <p style="color:#888;font-size:11px;text-align:center;">ID: ${data.bookingId}</p>
+  <p style="color:#888;font-size:11px;text-align:center;">ID: ${safeId}</p>
 </div>`;
 
     await fetch("https://api.resend.com/emails", {
@@ -253,18 +318,18 @@ async function sendNotifications(data: NotificationData): Promise<void> {
   <h1 style="color:#3D352F;font-size:22px;margin:0 0 4px;">Dziękujemy za zapytanie!</h1>
   <p style="color:#A68A64;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 24px;">Apartament Cień Ducha Gór · Szklarska Poręba</p>
   <hr style="border:none;border-top:1px solid #D2B48C;margin:0 0 24px;">
-  <p style="color:#3D352F;font-size:15px;">Drogi/Droga <strong>${data.guestName}</strong>,</p>
+  <p style="color:#3D352F;font-size:15px;">Drogi/Droga <strong>${safeName}</strong>,</p>
   <p style="color:#3D352F;font-size:15px;line-height:1.7;">
     Otrzymaliśmy Twoje zapytanie o rezerwację. Odezwiemy się do Ciebie <strong>w ciągu 24 godzin</strong>,
     aby potwierdzić dostępność i omówić szczegóły.
   </p>
   <div style="background:#F5F0E8;border-radius:8px;padding:20px;margin:24px 0;">
     <p style="color:#A68A64;font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:bold;margin:0 0 12px;">Szczegóły Twojego zapytania</p>
-    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Przyjazd:</strong> ${data.checkIn}</p>
-    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Wyjazd:</strong> ${data.checkOut}</p>
-    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Noce:</strong> ${data.nights} ${nightsLabel}</p>
-    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Goście:</strong> ${data.guestsCount}</p>
-    <p style="color:#A68A64;font-size:16px;font-weight:bold;margin:12px 0 0;"><strong>Szacunkowa cena:</strong> ${data.estimatedPrice} PLN</p>
+    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Przyjazd:</strong> ${safeIn}</p>
+    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Wyjazd:</strong> ${safeOut}</p>
+    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Noce:</strong> ${safeNights} ${safeNLabel}</p>
+    <p style="color:#3D352F;font-size:14px;margin:4px 0;"><strong>Goście:</strong> ${safeGuests}</p>
+    <p style="color:#A68A64;font-size:16px;font-weight:bold;margin:12px 0 0;"><strong>Szacunkowa cena:</strong> ${safePrice} PLN</p>
   </div>
   <p style="color:#888;font-size:13px;line-height:1.6;">
     Termin zostanie oficjalnie zarezerwowany po potwierdzeniu przez nas i uregulowaniu zaliczki.

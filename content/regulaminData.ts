@@ -8,8 +8,8 @@ W Karkonoszach mówi sie, ze góry pamiętają wszystko - każdy krok na szlaku,
 •	Dokonanie rezerwacji apartamentu jest równoznaczne z zapoznaniem się oraz pełną akceptacją niniejszego regulaminu.
 •	Regulamin obowiązuje wszystkich gości przebywających w apartamencie.
 2. Doba pobytowa
-•	Doba pobytowa rozpoczyna się o godzinie 15:00 w dniu przyjazdu.
-•	Doba pobytowa kończy się o godzinie 11:00 w dniu wyjazdu.
+•	Doba pobytowa rozpoczyna się o godzinie 14:00 w dniu przyjazdu.
+•	Doba pobytowa kończy się o godzinie 12:00 w dniu wyjazdu.
 •	Inne godziny przyjazdu lub wyjazdu są możliwe wyłącznie po wcześniejszym uzgodnieniu z właścicielem.
 3. Liczba gości
 •	W apartamencie może przebywać wyłącznie liczba osób wskazana w rezerwacji.

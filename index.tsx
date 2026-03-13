@@ -2,8 +2,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
 import App from './App';
 import RegulaminPage from './components/RegulaminPage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,10 +16,13 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/regulamin" element={<RegulaminPage />} />
-      </Routes>
+      <LanguageProvider>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/regulamin" element={<RegulaminPage />} />
+          <Route path="/polityka-prywatnosci" element={<PrivacyPolicyPage />} />
+        </Routes>
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

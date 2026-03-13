@@ -99,7 +99,7 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
   };
 
   return (
-    <div className="calendar-wrapper rounded-xl border border-cappuccino/20 bg-paper-white p-4 relative">
+    <div className="calendar-wrapper rounded-xl border border-cappuccino/20 bg-paper-white p-3 sm:p-4 relative overflow-x-auto">
       {loading && (
         <div className="absolute top-3 right-3 z-10">
           <span className="w-4 h-4 border-2 border-accent-gold/40 border-t-accent-gold rounded-full animate-spin inline-block" />
@@ -122,7 +122,7 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
         showOutsideDays
         startMonth={today.current}
       />
-      <div className="flex items-center justify-between mt-2 px-1 text-[10px] text-deep-brown/50 uppercase tracking-wider">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 px-1 text-[10px] text-deep-brown/50 uppercase tracking-wider">
         <span className="flex items-center gap-3 flex-wrap">
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-sm bg-accent-gold inline-block" /> Wybrany
@@ -137,7 +137,7 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
             <span className="w-2.5 h-2.5 rounded-sm bg-red-400/80 inline-block" /> Zarezerwowany
           </span>
         </span>
-        <span className="shrink-0">{pricePerNight} PLN/noc</span>
+        <span className="shrink-0 text-right sm:text-left">{pricePerNight} PLN/noc</span>
       </div>
     </div>
   );

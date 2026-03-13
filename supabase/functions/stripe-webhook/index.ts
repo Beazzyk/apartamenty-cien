@@ -2,6 +2,16 @@ import Stripe from "stripe";
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { log } from "../_shared/logger.ts";
 
+// ── Escape HTML — prevents XSS in email templates ────────────────────────────
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!);
 
 Deno.serve(async (req) => {
@@ -162,22 +172,31 @@ async function sendConfirmationEmail(booking: BookingInfo): Promise<void> {
       86_400_000,
   );
 
+  // Escape all user-supplied fields before HTML insertion (H-4)
+  const safeName   = esc(booking.guest_name);
+  const safeIn     = esc(booking.check_in);
+  const safeOut    = esc(booking.check_out);
+  const safeGuests = esc(booking.guests_count);
+  const safePrice  = esc(booking.total_price);
+  const safeNights = esc(nights);
+  const safeId     = esc(booking.id);
+
   const guestHtml = `
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background: #FDFBF7; padding: 40px; border-radius: 12px;">
       <h1 style="font-family: 'Playfair Display', serif; color: #3D352F; margin-bottom: 8px;">Potwierdzenie rezerwacji</h1>
       <p style="color: #A68A64; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Apartament Cień Ducha Gór</p>
       <hr style="border: none; border-top: 1px solid #D2B48C; margin: 24px 0;">
-      <p style="color: #3D352F;">Drogi/Droga <strong>${booking.guest_name}</strong>,</p>
+      <p style="color: #3D352F;">Drogi/Droga <strong>${safeName}</strong>,</p>
       <p style="color: #3D352F;">Twoja rezerwacja została potwierdzona! Oto szczegóły:</p>
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <tr><td style="padding: 8px 0; color: #666;">Data przyjazdu</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${booking.check_in}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Data wyjazdu</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${booking.check_out}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Liczba nocy</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${nights}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Goście</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${booking.guests_count}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Kwota</td><td style="padding: 8px 0; font-weight: 600; color: #A68A64; font-size: 18px;">${booking.total_price} PLN</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Data przyjazdu</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${safeIn}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Data wyjazdu</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${safeOut}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Liczba nocy</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${safeNights}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Goście</td><td style="padding: 8px 0; font-weight: 600; color: #3D352F;">${safeGuests}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Kwota</td><td style="padding: 8px 0; font-weight: 600; color: #A68A64; font-size: 18px;">${safePrice} PLN</td></tr>
       </table>
       <hr style="border: none; border-top: 1px solid #D2B48C; margin: 24px 0;">
-      <p style="color: #666; font-size: 13px;">Doba hotelowa: zameldowanie od 15:00, wymeldowanie do 11:00.</p>
+      <p style="color: #666; font-size: 13px;">Doba hotelowa: zameldowanie od 14:00, wymeldowanie do 12:00.</p>
       <p style="color: #3D352F;">Do zobaczenia w Szklarskiej Porębie!</p>
     </div>
   `;
@@ -212,11 +231,11 @@ async function sendConfirmationEmail(booking: BookingInfo): Promise<void> {
           subject: `Nowa rezerwacja: ${booking.guest_name} | ${booking.check_in} → ${booking.check_out}`,
           html: `<p>Nowa potwierdzona rezerwacja:</p>
             <ul>
-              <li><strong>Gość:</strong> ${booking.guest_name} (${booking.guest_email})</li>
-              <li><strong>Termin:</strong> ${booking.check_in} → ${booking.check_out} (${nights} nocy)</li>
-              <li><strong>Goście:</strong> ${booking.guests_count}</li>
-              <li><strong>Kwota:</strong> ${booking.total_price} PLN</li>
-              <li><strong>ID:</strong> ${booking.id}</li>
+              <li><strong>Gość:</strong> ${safeName} (${esc(booking.guest_email)})</li>
+              <li><strong>Termin:</strong> ${safeIn} – ${safeOut} (${safeNights} nocy)</li>
+              <li><strong>Goście:</strong> ${safeGuests}</li>
+              <li><strong>Kwota:</strong> ${safePrice} PLN</li>
+              <li><strong>ID:</strong> ${safeId}</li>
             </ul>`,
         }),
       });

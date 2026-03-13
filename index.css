@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* react-day-picker theme — matches site palette */
 .calendar-wrapper .rdp-root {
   --rdp-accent-color: #A68A64;
@@ -139,4 +143,9 @@
   fill: #3D352F;
   width: 0.875rem;
   height: 0.875rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

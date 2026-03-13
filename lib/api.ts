@@ -36,7 +36,7 @@ export async function checkAvailability(
   to: string,
 ): Promise<AvailabilityResponse> {
   if (!isConfigured()) {
-    return { unavailable_dates: [], price_per_night: 450 };
+    return { pending_dates: [], confirmed_dates: [], blocked_dates: [], price_per_night: 450 };
   }
   const res = await fetch(
     `${FUNCTIONS_URL}/check-availability?from=${from}&to=${to}`,

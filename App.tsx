@@ -8,11 +8,13 @@ import Gallery from './components/Gallery';
 import Amenities from './components/Amenities';
 import TrailRitual from './components/TrailRitual';
 import Location from './components/Location';
+import AttractionsBanner from './components/AttractionsBanner';
 import BookSection from './components/BookSection';
 import AboutUs from './components/AboutUs';
 import BookingSection from './components/BookingSection';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
+// CookieBanner zastąpiony przez Cookiebot (index.html) — pełna zgodność RODO
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -45,6 +47,7 @@ const App: React.FC = () => {
         <Amenities />
         <TrailRitual />
         <Location />
+        <AttractionsBanner />
         <BookSection />
         <AboutUs />
         <div id="rezerwacja">
@@ -53,6 +56,7 @@ const App: React.FC = () => {
         <FAQ />
       </main>
       <Footer />
+      {/* Cookiebot renderowany przez index.html */}
     </div>
   );
 };

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- Strona główna — PL (kanoniczna) -->
+  <url>
+    <loc>https://www.cienduchagor.pl/</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://www.cienduchagor.pl/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.cienduchagor.pl/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://www.cienduchagor.pl/?lang=cz"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cienduchagor.pl/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cienduchagor.pl/"/>
+    <image:image>
+      <image:loc>https://www.cienduchagor.pl/11.jpeg</image:loc>
+      <image:title>Salon z biblioteką i kominkiem — Apartament Cień Ducha Gór Szklarska Poręba</image:title>
+      <image:caption>Luksusowy apartament 67m² z kominkiem w zabytkowej willi XIX wieku w Szklarskiej Porębie</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.cienduchagor.pl/1.jpeg</image:loc>
+      <image:title>Wnętrza apartamentu Cień Ducha Gór — Szklarska Poręba</image:title>
+    </image:image>
+  </url>
+
+  <!-- Wersja niemiecka -->
+  <url>
+    <loc>https://www.cienduchagor.pl/?lang=de</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://www.cienduchagor.pl/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.cienduchagor.pl/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://www.cienduchagor.pl/?lang=cz"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cienduchagor.pl/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cienduchagor.pl/"/>
+  </url>
+
+  <!-- Wersja czeska -->
+  <url>
+    <loc>https://www.cienduchagor.pl/?lang=cz</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://www.cienduchagor.pl/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.cienduchagor.pl/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://www.cienduchagor.pl/?lang=cz"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cienduchagor.pl/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cienduchagor.pl/"/>
+  </url>
+
+  <!-- Wersja angielska -->
+  <url>
+    <loc>https://www.cienduchagor.pl/?lang=en</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://www.cienduchagor.pl/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.cienduchagor.pl/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://www.cienduchagor.pl/?lang=cz"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cienduchagor.pl/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cienduchagor.pl/"/>
+  </url>
+
+</urlset>

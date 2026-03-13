@@ -1,13 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from '../context/LanguageContext';
 
 const BASE = typeof import.meta !== 'undefined' && import.meta.env && typeof import.meta.env.BASE_URL === 'string'
   ? import.meta.env.BASE_URL
   : '';
 
-const GALLERY_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27];
-const N = GALLERY_IDS.length;
+const GALLERY_IMAGES = [
+  '1.jpeg',
+  '2.jpeg',
+  '3.jpeg',
+  '4.jpeg',
+  '5.jpeg',
+  '6.jpeg',
+  '7.jpeg',
+  '8.jpeg',
+  'rituals.jpeg',
+  '9.jpeg',
+  '12.jpeg',
+  '13.jpeg',
+  '14.jpeg',
+  '15.jpeg',
+  '17.jpeg',
+  '18.jpeg',
+  '20.jpeg',
+  '21.jpeg',
+  '22.jpeg',
+  '23.jpeg',
+  '24.jpeg',
+  '25.jpeg',
+  '26.jpeg',
+  '27.jpeg',
+];
+const N = GALLERY_IMAGES.length;
 
 const Gallery: React.FC = () => {
+  const { t } = useTranslation();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const goPrev = useCallback(() => {
@@ -30,25 +57,25 @@ const Gallery: React.FC = () => {
   }, [lightboxIndex, close, goPrev, goNext]);
 
   return (
-    <section id="apartament" className="py-24 bg-warm-beige overflow-hidden">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <section id="galeria" className="py-16 sm:py-20 md:py-24 bg-warm-beige overflow-hidden">
+      <div className="container mx-auto px-3 sm:px-4 max-w-6xl">
         <div className="text-center mb-10 scroll-reveal">
-          <span className="text-accent-gold uppercase tracking-[0.4em] text-xs font-bold mb-2 block">Visual Experience</span>
-          <h2 className="font-serif text-4xl md:text-5xl text-deep-brown mb-4">Wnętrza Pełne Charakteru</h2>
+          <span className="text-accent-gold uppercase tracking-[0.4em] text-xs font-bold mb-2 block">{t.gallery.label}</span>
+          <h2 className="font-serif text-4xl md:text-5xl text-deep-brown mb-4">{t.gallery.heading}</h2>
           <div className="w-24 h-px bg-accent-gold mx-auto" />
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2">
-          {GALLERY_IDS.map((id, i) => (
+          {GALLERY_IMAGES.map((filename, i) => (
             <button
-              key={id}
+              key={filename}
               type="button"
               onClick={() => setLightboxIndex(i)}
               className="relative overflow-hidden group scroll-reveal rounded-lg shadow-md border border-cappuccino/10 bg-deep-brown/5 text-left focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-offset-2"
               style={{ aspectRatio: '1' }}
             >
               <img
-                src={`${BASE}${id}.jpeg`}
+                src={`${BASE}${filename}`}
                 alt={`Apartament Cień Ducha Gór – zdjęcie ${i + 1}`}
                 className="block w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
@@ -91,7 +118,7 @@ const Gallery: React.FC = () => {
           </button>
 
           <img
-            src={`${BASE}${GALLERY_IDS[lightboxIndex]}.jpeg`}
+            src={`${BASE}${GALLERY_IMAGES[lightboxIndex]}`}
             alt={`Apartament Cień Ducha Gór – zdjęcie ${lightboxIndex + 1}`}
             className="max-w-full max-h-[85vh] w-auto h-auto object-contain rounded"
             onClick={(e) => e.stopPropagation()}
@@ -119,3 +146,5 @@ const Gallery: React.FC = () => {
 };
 
 export default Gallery;
+
+
