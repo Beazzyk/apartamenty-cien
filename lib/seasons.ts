@@ -12,8 +12,8 @@ export interface SeasonPricing {
 
 export const DEFAULT_SEASON_PRICING: SeasonPricing = {
   price_per_night_offseason: 350,
-  price_per_night_peak: 500,
-  price_per_night_holiday: 900,
+  price_per_night_peak: 490,
+  price_per_night_holiday: 890,
   min_nights_offseason: 2,
   min_nights_peak: 4,
   min_nights_holiday: 5,
@@ -30,13 +30,13 @@ export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
   holiday: {
     season: 'holiday',
     label: 'Święta / sylwester',
-    pricePerNight: 900,
+    pricePerNight: 890,
     minNights: 5,
   },
   peak: {
     season: 'peak',
     label: 'Sezon',
-    pricePerNight: 500,
+    pricePerNight: 490,
     minNights: 4,
   },
   offseason: {

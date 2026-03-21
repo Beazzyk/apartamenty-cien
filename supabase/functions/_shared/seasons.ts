@@ -9,8 +9,8 @@ export interface SeasonConfig {
 }
 
 export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
-  holiday:  { season: "holiday",  pricePerNight: 900, minNights: 5 },
-  peak:     { season: "peak",     pricePerNight: 500, minNights: 4 },
+  holiday:  { season: "holiday",  pricePerNight: 890, minNights: 5 },
+  peak:     { season: "peak",     pricePerNight: 490, minNights: 4 },
   offseason:{ season: "offseason",pricePerNight: 350, minNights: 2 },
 };
 

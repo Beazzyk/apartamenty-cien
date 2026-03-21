@@ -1,8 +1,8 @@
 -- Pełne ceny sezonowe i min. noce — źródło prawdy wraz z edge functions (create-booking, check-availability).
 INSERT INTO public.settings (key, value) VALUES
   ('price_per_night_offseason', '350'),
-  ('price_per_night_peak', '500'),
-  ('price_per_night_holiday', '900'),
+  ('price_per_night_peak', '490'),
+  ('price_per_night_holiday', '890'),
   ('min_nights_offseason', '2'),
   ('min_nights_peak', '4'),
   ('min_nights_holiday', '5')
