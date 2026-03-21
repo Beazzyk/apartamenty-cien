@@ -3,12 +3,14 @@ import { DayPicker, type DateRange } from 'react-day-picker';
 import { pl } from 'react-day-picker/locale';
 import 'react-day-picker/style.css';
 import { checkAvailability } from '../lib/api';
+import { DEFAULT_SEASON_PRICING, type SeasonPricing } from '../lib/seasons';
 
 interface Props {
   checkIn: string | null;
   checkOut: string | null;
   onRangeChange: (from: string | null, to: string | null) => void;
-  onPriceUpdate: (price: number) => void;
+  /** Stawki z API / bazy — używane do wyświetlania „od …” i kalkulacji w formularzu. */
+  onPricingUpdate: (pricing: SeasonPricing) => void;
 }
 
 function toDateStr(d: Date): string {
@@ -30,14 +32,14 @@ function sameDay(a: Date, b: Date): boolean {
     a.getDate() === b.getDate();
 }
 
-const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChange, onPriceUpdate }) => {
+const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChange, onPricingUpdate }) => {
   const today = useRef((() => { const d = new Date(); d.setHours(0,0,0,0); return d; })());
 
   const [pendingDates, setPendingDates]     = useState<Date[]>([]);
   const [confirmedDates, setConfirmedDates] = useState<Date[]>([]);
   const [blockedDates, setBlockedDates]     = useState<Date[]>([]);
   const [loading, setLoading]               = useState(false);
-  const [pricePerNight, setPricePerNight]   = useState(450);
+  const [pricePerNight, setPricePerNight]   = useState(DEFAULT_SEASON_PRICING.price_per_night_offseason);
   const [displayMonth, setDisplayMonth]     = useState(today.current);
 
   const fetchData = useCallback(async (month: Date) => {
@@ -53,14 +55,15 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
       setPendingDates(data.pending_dates.map(parseDate));
       setConfirmedDates(data.confirmed_dates.map(parseDate));
       setBlockedDates(data.blocked_dates.map(parseDate));
-      setPricePerNight(data.price_per_night);
-      onPriceUpdate(data.price_per_night);
+      const p = data.pricing ?? DEFAULT_SEASON_PRICING;
+      setPricePerNight(data.price_per_night ?? p.price_per_night_offseason);
+      onPricingUpdate(p);
     } catch {
       // keep showing previous
     } finally {
       setLoading(false);
     }
-  }, [onPriceUpdate]);
+  }, [onPricingUpdate]);
 
   useEffect(() => {
     fetchData(displayMonth);

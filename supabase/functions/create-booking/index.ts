@@ -2,6 +2,7 @@ import { supabaseAdmin } from "../_shared/supabase.ts";
 import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
+import { fetchPricingFromDb } from "../_shared/pricing.ts";
 import { getSeasonConfig } from "../_shared/seasons.ts";
 
 // ── Escape HTML — prevents XSS in email templates ────────────────────────────
@@ -104,12 +105,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- Season: validate minimum nights and calculate price ---
+    // --- Season: validate minimum nights and calculate price (rates from settings) ---
     const nights = Math.ceil(
       (checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000,
     );
 
-    const season = getSeasonConfig(check_in, check_out);
+    const pricing = await fetchPricingFromDb(supabaseAdmin);
+    const season = getSeasonConfig(check_in, check_out, pricing);
 
     if (nights < season.minNights) {
       return errorResponse(

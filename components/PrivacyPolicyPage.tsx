@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { POLITYKA_PRYWATNOSCI } from '../content/privacyPolicy';
+import RitualsBadge from './RitualsBadge';
 
 // Formatter: dzieli tekst na linie i sekcje, wyróżnia tytuł, nagłówki i sekcję cookies.
 
@@ -116,6 +117,7 @@ const PrivacyPolicyPage: React.FC = () => {
           </div>
         </article>
       </main>
+      <RitualsBadge />
     </div>
   );
 };

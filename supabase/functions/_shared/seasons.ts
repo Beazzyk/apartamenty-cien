@@ -1,3 +1,5 @@
+import type { SeasonPricing } from "./pricing.ts";
+
 export type Season = "holiday" | "peak" | "offseason";
 
 export interface SeasonConfig {
@@ -8,8 +10,8 @@ export interface SeasonConfig {
 
 export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
   holiday:  { season: "holiday",  pricePerNight: 900, minNights: 5 },
-  peak:     { season: "peak",     pricePerNight: 600, minNights: 4 },
-  offseason:{ season: "offseason",pricePerNight: 450, minNights: 2 },
+  peak:     { season: "peak",     pricePerNight: 500, minNights: 4 },
+  offseason:{ season: "offseason",pricePerNight: 350, minNights: 2 },
 };
 
 // Easter Sundays – extend when needed
@@ -83,6 +85,28 @@ export function getSeasonForStay(checkIn: string, checkOut: string): Season {
   return hasPeak ? "peak" : "offseason";
 }
 
-export function getSeasonConfig(checkIn: string, checkOut: string): SeasonConfig {
-  return SEASON_CONFIGS[getSeasonForStay(checkIn, checkOut)];
+export function getSeasonConfig(
+  checkIn: string,
+  checkOut: string,
+  pricing?: SeasonPricing | null,
+): SeasonConfig {
+  const season = getSeasonForStay(checkIn, checkOut);
+  const base = SEASON_CONFIGS[season];
+  if (pricing == null) return base;
+  const map: Record<Season, { price: number; min: number }> = {
+    holiday: {
+      price: pricing.price_per_night_holiday,
+      min: pricing.min_nights_holiday,
+    },
+    peak: {
+      price: pricing.price_per_night_peak,
+      min: pricing.min_nights_peak,
+    },
+    offseason: {
+      price: pricing.price_per_night_offseason,
+      min: pricing.min_nights_offseason,
+    },
+  };
+  const m = map[season];
+  return { ...base, pricePerNight: m.price, minNights: m.min };
 }

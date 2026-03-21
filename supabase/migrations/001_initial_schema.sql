@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 INSERT INTO settings (key, value) VALUES
-  ('price_per_night', '450'),
+  ('price_per_night', '350'),
   ('currency', 'PLN'),
   ('apartment_name', 'Cień Ducha Gór'),
   ('owner_email', ''),

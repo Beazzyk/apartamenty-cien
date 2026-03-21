@@ -2,7 +2,13 @@ import React, { useState, useCallback } from 'react';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { createBooking } from '../lib/api';
 import { useTranslation } from '../context/LanguageContext';
-import { getSeasonConfig, nightsPL, type SeasonConfig } from '../lib/seasons';
+import {
+  DEFAULT_SEASON_PRICING,
+  getSeasonConfig,
+  nightsPL,
+  type SeasonConfig,
+  type SeasonPricing,
+} from '../lib/seasons';
 
 type BookingStatus = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -16,7 +22,7 @@ const BookingSection: React.FC = () => {
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
-  const [pricePerNight, setPricePerNight] = useState(450);
+  const [seasonPricing, setSeasonPricing] = useState<SeasonPricing | null>(null);
   const [status, setStatus] = useState<BookingStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [submittedDates, setSubmittedDates] = useState<{ checkIn: string; checkOut: string } | null>(null);
@@ -30,8 +36,11 @@ const BookingSection: React.FC = () => {
     ? Math.ceil((new Date(checkOut + 'T00:00:00').getTime() - new Date(checkIn + 'T00:00:00').getTime()) / 86_400_000)
     : 0;
 
-  const seasonConfig: SeasonConfig | null = checkIn && checkOut ? getSeasonConfig(checkIn, checkOut) : null;
-  const effectivePrice = seasonConfig ? seasonConfig.pricePerNight : pricePerNight;
+  const seasonConfig: SeasonConfig | null =
+    checkIn && checkOut ? getSeasonConfig(checkIn, checkOut, seasonPricing) : null;
+  const effectivePrice = seasonConfig
+    ? seasonConfig.pricePerNight
+    : (seasonPricing?.price_per_night_offseason ?? DEFAULT_SEASON_PRICING.price_per_night_offseason);
   const minNights = seasonConfig ? seasonConfig.minNights : 2;
   const meetsMinNights = nights === 0 || nights >= minNights;
 
@@ -78,6 +87,7 @@ const BookingSection: React.FC = () => {
     setGuestName('');
     setGuestEmail('');
     setGuestPhone('');
+    setSeasonPricing(null);
     setStatus('idle');
     setErrorMsg('');
     setSubmittedDates(null);
@@ -145,7 +155,7 @@ const BookingSection: React.FC = () => {
                 checkIn={checkIn}
                 checkOut={checkOut}
                 onRangeChange={handleRangeChange}
-                onPriceUpdate={setPricePerNight}
+                onPricingUpdate={setSeasonPricing}
               />
 
               {checkIn && (

@@ -1,5 +1,24 @@
 export type Season = 'holiday' | 'peak' | 'offseason';
 
+/** Wartości z `public.settings` — zsynchronizowane z API check-availability. */
+export interface SeasonPricing {
+  price_per_night_offseason: number;
+  price_per_night_peak: number;
+  price_per_night_holiday: number;
+  min_nights_offseason: number;
+  min_nights_peak: number;
+  min_nights_holiday: number;
+}
+
+export const DEFAULT_SEASON_PRICING: SeasonPricing = {
+  price_per_night_offseason: 350,
+  price_per_night_peak: 500,
+  price_per_night_holiday: 900,
+  min_nights_offseason: 2,
+  min_nights_peak: 4,
+  min_nights_holiday: 5,
+};
+
 export interface SeasonConfig {
   season: Season;
   label: string;
@@ -17,13 +36,13 @@ export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
   peak: {
     season: 'peak',
     label: 'Sezon',
-    pricePerNight: 600,
+    pricePerNight: 500,
     minNights: 4,
   },
   offseason: {
     season: 'offseason',
     label: 'Poza sezonem',
-    pricePerNight: 450,
+    pricePerNight: 350,
     minNights: 2,
   },
 };
@@ -97,8 +116,30 @@ export function getSeasonForStay(checkIn: string, checkOut: string): Season {
   return hasPeak ? 'peak' : 'offseason';
 }
 
-export function getSeasonConfig(checkIn: string, checkOut: string): SeasonConfig {
-  return SEASON_CONFIGS[getSeasonForStay(checkIn, checkOut)];
+export function getSeasonConfig(
+  checkIn: string,
+  checkOut: string,
+  pricing?: SeasonPricing | null,
+): SeasonConfig {
+  const season = getSeasonForStay(checkIn, checkOut);
+  const base = SEASON_CONFIGS[season];
+  if (pricing == null) return base;
+  const map: Record<Season, { price: number; min: number }> = {
+    holiday: {
+      price: pricing.price_per_night_holiday,
+      min: pricing.min_nights_holiday,
+    },
+    peak: {
+      price: pricing.price_per_night_peak,
+      min: pricing.min_nights_peak,
+    },
+    offseason: {
+      price: pricing.price_per_night_offseason,
+      min: pricing.min_nights_offseason,
+    },
+  };
+  const m = map[season];
+  return { ...base, pricePerNight: m.price, minNights: m.min };
 }
 
 /** Polish plural for nights: 1 noc / 2-4 noce / 5+ nocy */

@@ -1,3 +1,5 @@
+import { DEFAULT_SEASON_PRICING, type SeasonPricing } from "./seasons";
+
 declare global {
   interface ImportMeta {
     env: Record<string, string>;
@@ -14,7 +16,10 @@ export interface AvailabilityResponse {
   pending_dates: string[];
   confirmed_dates: string[];
   blocked_dates: string[];
+  /** Cena „od …” (poza sezonem) — kompatybilność wsteczna. */
   price_per_night: number;
+  /** Pełny zestaw stawek z bazy (create-booking używa tych samych kluczy). */
+  pricing: SeasonPricing;
 }
 
 export interface CreateBookingRequest {
@@ -36,7 +41,13 @@ export async function checkAvailability(
   to: string,
 ): Promise<AvailabilityResponse> {
   if (!isConfigured()) {
-    return { pending_dates: [], confirmed_dates: [], blocked_dates: [], price_per_night: 450 };
+    return {
+      pending_dates: [],
+      confirmed_dates: [],
+      blocked_dates: [],
+      price_per_night: DEFAULT_SEASON_PRICING.price_per_night_offseason,
+      pricing: { ...DEFAULT_SEASON_PRICING },
+    };
   }
   const res = await fetch(
     `${FUNCTIONS_URL}/check-availability?from=${from}&to=${to}`,
@@ -45,7 +56,14 @@ export async function checkAvailability(
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || "Nie udało się sprawdzić dostępności");
   }
-  return res.json();
+  const data = await res.json();
+  const pricing = data.pricing ?? { ...DEFAULT_SEASON_PRICING };
+  return {
+    ...data,
+    pricing,
+    price_per_night:
+      data.price_per_night ?? pricing.price_per_night_offseason,
+  };
 }
 
 export async function createBooking(

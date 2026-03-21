@@ -5,6 +5,7 @@ import {
   errorResponse,
 } from "../_shared/cors.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
+import { fetchPricingFromDb } from "../_shared/pricing.ts";
 
 /** Normalize DB date (YYYY-MM-DD or ISO string) to YYYY-MM-DD for consistent API response. */
 function toDateOnly(s: string | null | undefined): string {
@@ -25,8 +26,8 @@ Deno.serve(async (req) => {
       return errorResponse("Parameters 'from' and 'to' required (YYYY-MM-DD)", 400);
     }
 
-    // Run DB queries and fresh iCal fetch concurrently
-    const [pendingResult, confirmedResult, blockedResult, icalDates, priceResult] =
+    // Run DB queries, pricing, and fresh iCal fetch concurrently
+    const [pendingResult, confirmedResult, blockedResult, icalDates, pricing] =
       await Promise.all([
         supabaseAdmin
           .from("bookings")
@@ -50,11 +51,7 @@ Deno.serve(async (req) => {
 
         fetchICalFromSettings(from, to),
 
-        supabaseAdmin
-          .from("settings")
-          .select("value")
-          .eq("key", "price_per_night")
-          .single(),
+        fetchPricingFromDb(supabaseAdmin),
       ]);
 
     const pendingSet   = new Set<string>();
@@ -100,7 +97,8 @@ Deno.serve(async (req) => {
       pending_dates:   [...pendingSet].sort(),
       confirmed_dates: [...confirmedSet].sort(),
       blocked_dates:   [...blockedSet].sort(),
-      price_per_night: parseInt(priceResult.data?.value ?? "450"),
+      price_per_night: pricing.price_per_night_offseason,
+      pricing,
     });
   } catch (error) {
     console.error("[check-availability]", error);

@@ -188,10 +188,10 @@ const Navbar: React.FC = () => {
       </div>
     </nav>
 
-      {/* Menu mobilne – poza <nav>, pełny ekran pod paskiem, zawsze na brązowym tle */}
+      {/* Menu mobilne – górna krawędź poniżej paska i hero, żeby nie nachodzić na "Cień Ducha Gór" */}
       <div
         className={`md:hidden fixed left-0 right-0 bottom-0 z-[50] bg-deep-brown transition-opacity duration-300 border-t-2 border-accent-gold/60 shadow-[0_-4px_24px_rgba(0,0,0,0.3)] overflow-y-auto ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        style={{ top: '3rem', minHeight: 'calc(100vh - 3rem)' }}
+        style={{ top: '5rem', minHeight: 'calc(100vh - 5rem)' }}
         aria-hidden={!isMenuOpen}
       >
         <div className="container mx-auto px-6 py-8 flex flex-col gap-1 border-x-2 border-accent-gold/30 min-h-full">

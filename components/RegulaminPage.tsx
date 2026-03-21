@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { REGULAMIN } from '../content/regulaminData';
+import RitualsBadge from './RitualsBadge';
 
 type Lang = 'pl' | 'cz' | 'de' | 'en';
 
@@ -153,6 +154,7 @@ const RegulaminPage: React.FC = () => {
           </div>
         </article>
       </main>
+      <RitualsBadge />
     </div>
   );
 };
