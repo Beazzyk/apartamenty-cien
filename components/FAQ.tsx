@@ -30,8 +30,6 @@ const FAQ: React.FC = () => {
     <section
       className="py-24 bg-warm-beige"
       aria-label={t.faq.heading}
-      itemScope
-      itemType="https://schema.org/FAQPage"
     >
       <div className="container mx-auto px-6 max-w-3xl">
         <h2 className="font-serif text-4xl text-center text-deep-brown mb-16 scroll-reveal">
@@ -44,9 +42,6 @@ const FAQ: React.FC = () => {
               key={i}
               className="border-b border-cappuccino/30"
               style={i >= VISIBLE_BY_DEFAULT ? { animation: `fadeIn 0.4s ease both`, animationDelay: `${(i - VISIBLE_BY_DEFAULT) * 60}ms` } : undefined}
-              itemScope
-              itemProp="mainEntity"
-              itemType="https://schema.org/Question"
             >
               <button
                 className="w-full py-6 flex justify-between items-center text-left focus:outline-none group"
@@ -57,7 +52,6 @@ const FAQ: React.FC = () => {
               >
                 <span
                   className={`text-lg font-serif transition-colors pr-4 ${openIndex === i ? 'text-accent-gold' : 'text-deep-brown'}`}
-                  itemProp="name"
                 >
                   {item.q}
                 </span>
@@ -73,11 +67,8 @@ const FAQ: React.FC = () => {
                 role="region"
                 aria-labelledby={`faq-question-${i}`}
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${openIndex === i ? 'max-h-96 pb-6' : 'max-h-0'}`}
-                itemScope
-                itemProp="acceptedAnswer"
-                itemType="https://schema.org/Answer"
               >
-                <p className="text-deep-brown/70 leading-relaxed" itemProp="text">
+                <p className="text-deep-brown/70 leading-relaxed">
                   {item.a}
                 </p>
               </div>

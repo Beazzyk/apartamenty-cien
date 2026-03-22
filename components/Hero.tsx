@@ -9,21 +9,7 @@ const Hero: React.FC = () => {
     <section
       className="relative min-h-[90vh] w-full flex items-start justify-center pt-24 md:pt-32 overflow-hidden"
       aria-label="Apartament Cień Ducha Gór, Szklarska Poręba"
-      itemScope
-      itemType="https://schema.org/LodgingBusiness"
     >
-      {/* Hidden microdata for SEO */}
-      <meta itemProp="name" content="Apartament Cień Ducha Gór" />
-      <meta itemProp="description" content="Luksusowy apartament 67 m² z kominkiem w zabytkowej willi XIX wieku w centrum Szklarskiej Poręby. 130 m od szlaku Wysoki Kamień." />
-      <meta itemProp="url" content="https://www.cienduchagor.pl/" />
-      <meta itemProp="telephone" content="" />
-      <span itemProp="address" itemScope itemType="https://schema.org/PostalAddress" className="hidden">
-        <meta itemProp="streetAddress" content="ul. Dworcowa 1" />
-        <meta itemProp="addressLocality" content="Szklarska Poręba" />
-        <meta itemProp="postalCode" content="58-580" />
-        <meta itemProp="addressCountry" content="PL" />
-      </span>
-
       <div className="absolute inset-0">
         <img
           src="/11.jpeg"
@@ -33,18 +19,17 @@ const Hero: React.FC = () => {
           height="1080"
           loading="eager"
           fetchPriority="high"
-          itemProp="image"
         />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-warm-beige via-transparent to-black/20"></div>
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto scroll-reveal active">
-        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight" itemProp="headline">
+        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight">
           {t.hero.heading1} <br/>
           <span className="italic">{t.hero.heading2}</span>
         </h1>
-        <p className="font-sans text-xl md:text-2xl text-paper-white mb-8 font-light tracking-wide max-w-3xl mx-auto drop-shadow-md" itemProp="description">
+        <p className="font-sans text-xl md:text-2xl text-paper-white mb-8 font-light tracking-wide max-w-3xl mx-auto drop-shadow-md">
           {t.hero.sub}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
