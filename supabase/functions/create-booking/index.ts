@@ -3,7 +3,7 @@ import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
 import { fetchPricingFromDb } from "../_shared/pricing.ts";
-import { getSeasonConfig } from "../_shared/seasons.ts";
+import { computeStayPriceBreakdown, getSeasonConfig } from "../_shared/seasons.ts";
 
 // ── Escape HTML — prevents XSS in email templates ────────────────────────────
 function esc(s: unknown): string {
@@ -112,16 +112,14 @@ Deno.serve(async (req) => {
 
     const pricing = await fetchPricingFromDb(supabaseAdmin);
     const season = getSeasonConfig(check_in, check_out, pricing);
+    const estimatedPrice = computeStayPriceBreakdown(check_in, check_out, pricing).total;
 
     if (nights < season.minNights) {
       return errorResponse(
-        `Dla wybranego terminu (${season.season === "holiday" ? "święta/sylwester" : season.season === "peak" ? "sezon" : "poza sezonem"}) wymagane są minimum ${season.minNights} ${season.minNights < 5 ? "noce" : "nocy"}.`,
+        `Dla wybranego terminu (${season.label}) wymagane są minimum ${season.minNights} ${season.minNights < 5 ? "noce" : "nocy"}.`,
         400,
       );
     }
-
-    const pricePerNight = season.pricePerNight;
-    const estimatedPrice = nights * pricePerNight;
 
     // --- Insert booking — fetch management_token too ---
     const { data: booking, error: bookingError } = await supabaseAdmin

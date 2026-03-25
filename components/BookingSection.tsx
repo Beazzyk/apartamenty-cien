@@ -3,6 +3,7 @@ import AvailabilityCalendar from './AvailabilityCalendar';
 import { createBooking } from '../lib/api';
 import { useTranslation } from '../context/LanguageContext';
 import {
+  computeStayPriceBreakdown,
   DEFAULT_SEASON_PRICING,
   getSeasonConfig,
   nightsPL,
@@ -36,15 +37,19 @@ const BookingSection: React.FC = () => {
     ? Math.ceil((new Date(checkOut + 'T00:00:00').getTime() - new Date(checkIn + 'T00:00:00').getTime()) / 86_400_000)
     : 0;
 
+  const pricingForCalc = seasonPricing ?? DEFAULT_SEASON_PRICING;
+  const breakdown =
+    checkIn && checkOut ? computeStayPriceBreakdown(checkIn, checkOut, pricingForCalc) : null;
+  const totalPrice = breakdown?.total ?? 0;
+  const isMixedRates = (breakdown?.lines.length ?? 0) > 1;
+
   const seasonConfig: SeasonConfig | null =
     checkIn && checkOut ? getSeasonConfig(checkIn, checkOut, seasonPricing) : null;
   const effectivePrice = seasonConfig
     ? seasonConfig.pricePerNight
-    : (seasonPricing?.price_per_night_offseason ?? DEFAULT_SEASON_PRICING.price_per_night_offseason);
+    : pricingForCalc.price_per_night_offseason;
   const minNights = seasonConfig ? seasonConfig.minNights : 2;
   const meetsMinNights = nights === 0 || nights >= minNights;
-
-  const totalPrice = nights * effectivePrice;
 
   const canSubmit =
     checkIn && checkOut && nights >= minNights && guestName.trim() && guestEmail.trim() && status !== 'submitting';
@@ -247,17 +252,25 @@ const BookingSection: React.FC = () => {
                           seasonConfig.season === 'peak'    ? 'bg-amber-100 text-amber-700' :
                           'bg-emerald-100 text-emerald-700'
                         }`}>
-                          {seasonConfig.label}
+                          {isMixedRates ? b.mixedStaysBadge : seasonConfig.label}
                         </span>
                         <span className="text-[11px] text-deep-brown/50">
                           min. {seasonConfig.minNights} {nightsPL(seasonConfig.minNights)}
                         </span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm text-deep-brown/60">
-                      <span>{effectivePrice} PLN × {nights} {nightLabel(nights)}</span>
-                      <span>{totalPrice} PLN</span>
-                    </div>
+                    {breakdown && breakdown.lines.length > 0 ? (
+                      <div className="space-y-2">
+                        {breakdown.lines.map((line, i) => (
+                          <div key={i} className="flex justify-between text-sm text-deep-brown/60">
+                            <span>
+                              {line.unitPrice} PLN × {line.nights} {nightLabel(line.nights)}
+                            </span>
+                            <span>{line.subtotal} PLN</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                     {/* Minimum nights warning */}
                     {!meetsMinNights && (
                       <div className="mt-3 flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
