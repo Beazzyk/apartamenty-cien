@@ -9,8 +9,6 @@ export interface SeasonConfig {
   label: string;
 }
 
-export const RELAXED_HOLIDAY_LABEL = "Majówka / Boże Ciało";
-
 export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
   holiday:  { season: "holiday",  pricePerNight: 890, minNights: 5, label: "Święta / sylwester" },
   peak:     { season: "peak",     pricePerNight: 490, minNights: 4, label: "Sezon" },
@@ -44,64 +42,61 @@ function addDaysUTC(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Sylwester/Boże Narodzenie, Wielkanoc — stawka świąteczna i minimum 5 nocy. */
-function isStrictHolidayDate(date: string): boolean {
+function isChristmasNewYearHolidayDate(date: string): boolean {
   const parts = date.split("-").map(Number);
-  const y = parts[0], m = parts[1], d = parts[2];
-
-  // Christmas / New Year: Dec 22 – Jan 6
+  const m = parts[1], d = parts[2];
   if (m === 12 && d >= 22) return true;
   if (m === 1  && d <= 6)  return true;
-
-  // Easter: Wednesday before (−4) to Tuesday after (+2)
-  const easter = EASTER_SUNDAYS[y];
-  if (easter) {
-    for (let offset = -4; offset <= 2; offset++) {
-      if (addDaysUTC(easter, offset) === date) return true;
-    }
-  }
-
   return false;
 }
 
-/** Majówka i Boże Ciało — stawka świąteczna, ale minimum jak poza sezonem (2 noce). */
-function isRelaxedHolidayPriceDate(date: string): boolean {
+function isEasterWeekDate(date: string): boolean {
   const parts = date.split("-").map(Number);
-  const y = parts[0], m = parts[1], d = parts[2];
+  const y = parts[0];
+  const easter = EASTER_SUNDAYS[y];
+  if (!easter) return false;
+  for (let offset = -4; offset <= 2; offset++) {
+    if (addDaysUTC(easter, offset) === date) return true;
+  }
+  return false;
+}
 
-  // May long weekend: Apr 30 – May 4
+function isMajowkaDate(date: string): boolean {
+  const parts = date.split("-").map(Number);
+  const m = parts[1], d = parts[2];
   if (m === 4 && d === 30) return true;
   if (m === 5 && d <= 4)   return true;
+  return false;
+}
 
-  // Boże Ciało (czwartek = Wielkanoc + 60 dni): czw.–niedz.
+function isCorpusChristiLongWeekend(date: string): boolean {
+  const parts = date.split("-").map(Number);
+  const y = parts[0];
   const easter = EASTER_SUNDAYS[y];
-  if (easter) {
-    for (let offset = 0; offset <= 3; offset++) {
-      if (addDaysUTC(easter, 60 + offset) === date) return true;
-    }
+  if (!easter) return false;
+  for (let offset = 0; offset <= 3; offset++) {
+    if (addDaysUTC(easter, 60 + offset) === date) return true;
   }
-
   return false;
 }
 
 function isPeakDate(date: string): boolean {
+  if (isEasterWeekDate(date)) return true;
+  if (isMajowkaDate(date)) return true;
+  if (isCorpusChristiLongWeekend(date)) return true;
+
   const parts = date.split("-").map(Number);
   const m = parts[1], d = parts[2];
 
-  // Summer: Jun 20 – Sep 14
   if ((m === 6 && d >= 20) || m === 7 || m === 8 || (m === 9 && d <= 14)) return true;
-
-  // Winter school break (ferie zimowe Dolnośląskie): Feb 1–22
   if (m === 2 && d >= 1 && d <= 22) return true;
 
   return false;
 }
 
-/** Święta ścisłe zawsze holiday; majówka/BC + ten sam dzień w sezonie → peak. */
+/** 890 tylko 22.12–06.01; Wielkanoc, majówka, Boże Ciało itd. jak sezon (490). */
 export function getPriceTierForNight(date: string): Season {
-  if (isStrictHolidayDate(date)) return "holiday";
-  if (isRelaxedHolidayPriceDate(date) && isPeakDate(date)) return "peak";
-  if (isRelaxedHolidayPriceDate(date)) return "holiday";
+  if (isChristmasNewYearHolidayDate(date)) return "holiday";
   if (isPeakDate(date)) return "peak";
   return "offseason";
 }
@@ -160,21 +155,25 @@ export function getSeasonForStay(checkIn: string, checkOut: string): Season {
   return hasPeak ? "peak" : "offseason";
 }
 
-function stayIncludesStrictHolidayNight(checkIn: string, checkOut: string): boolean {
-  const cursor = new Date(checkIn  + "T00:00:00Z");
-  const end    = new Date(checkOut + "T00:00:00Z");
-  while (cursor < end) {
-    const d = cursor.toISOString().slice(0, 10);
-    if (isStrictHolidayDate(d)) return true;
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return false;
-}
-
 function dominantSeasonForBadge(breakdown: StayPriceBreakdown): Season {
   if (breakdown.lines.some((l) => l.tier === "holiday")) return "holiday";
   if (breakdown.lines.some((l) => l.tier === "peak")) return "peak";
   return "offseason";
+}
+
+function isNonMajowkaPeakNight(date: string): boolean {
+  return getPriceTierForNight(date) === "peak" && !isMajowkaDate(date);
+}
+
+function stayIncludesNonMajowkaPeakNight(checkIn: string, checkOut: string): boolean {
+  const cursor = new Date(checkIn  + "T00:00:00Z");
+  const end    = new Date(checkOut + "T00:00:00Z");
+  while (cursor < end) {
+    const d = cursor.toISOString().slice(0, 10);
+    if (isNonMajowkaPeakNight(d)) return true;
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return false;
 }
 
 export function getSeasonConfig(
@@ -188,9 +187,6 @@ export function getSeasonConfig(
 
   const seasonFromStay = getSeasonForStay(checkIn, checkOut);
   const base = SEASON_CONFIGS[seasonFromStay];
-
-  const relaxedHolidayMin =
-    seasonFromStay === "holiday" && !stayIncludesStrictHolidayNight(checkIn, checkOut);
 
   const map: Record<Season, { price: number; min: number }> = {
     holiday: {
@@ -207,12 +203,12 @@ export function getSeasonConfig(
     },
   };
   const m = map[seasonFromStay];
-  const minNights = relaxedHolidayMin ? p.min_nights_offseason : m.min;
-
-  let label = base.label;
-  if (relaxedHolidayMin && !multipleRates) {
-    label = RELAXED_HOLIDAY_LABEL;
-  }
+  const minNights =
+    seasonFromStay === "holiday"
+      ? p.min_nights_holiday
+      : stayIncludesNonMajowkaPeakNight(checkIn, checkOut)
+        ? p.min_nights_peak
+        : p.min_nights_offseason;
 
   const season = multipleRates ? dominantSeasonForBadge(breakdown) : seasonFromStay;
 
@@ -222,7 +218,7 @@ export function getSeasonConfig(
 
   return {
     season,
-    label,
+    label: base.label,
     pricePerNight,
     minNights,
   };
