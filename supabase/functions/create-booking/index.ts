@@ -112,7 +112,8 @@ Deno.serve(async (req) => {
 
     const pricing = await fetchPricingFromDb(supabaseAdmin);
     const season = getSeasonConfig(check_in, check_out, pricing);
-    const estimatedPrice = computeStayPriceBreakdown(check_in, check_out, pricing).total;
+    const priceBreakdown = computeStayPriceBreakdown(check_in, check_out, pricing);
+    const estimatedPrice = Math.round(priceBreakdown.total * 100) / 100;
 
     if (nights < season.minNights) {
       return errorResponse(
@@ -167,7 +168,17 @@ Deno.serve(async (req) => {
       guests_count: guestCount,
     });
 
-    return jsonResponse({ success: true, booking_id: booking.id });
+    return jsonResponse({
+      success: true,
+      booking_id: booking.id,
+      total_price: estimatedPrice,
+      breakdown: priceBreakdown.lines.map((l) => ({
+        tier: l.tier,
+        nights: l.nights,
+        unit_price: l.unitPrice,
+        subtotal: l.subtotal,
+      })),
+    });
   } catch (error) {
     await log("error", "booking", `Create booking failed: ${error.message}`, {
       error: String(error),

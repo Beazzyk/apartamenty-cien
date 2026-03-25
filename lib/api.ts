@@ -31,9 +31,19 @@ export interface CreateBookingRequest {
   guests_count: number;
 }
 
+export interface CreateBookingPriceLine {
+  tier: string;
+  nights: number;
+  unit_price: number;
+  subtotal: number;
+}
+
 export interface CreateBookingResponse {
   booking_id: string;
   success: boolean;
+  /** Po wdrożeniu create-booking z mieszaną ceną — zgodne z `total_price` w bazie. */
+  total_price?: number;
+  breakdown?: CreateBookingPriceLine[];
 }
 
 export async function checkAvailability(

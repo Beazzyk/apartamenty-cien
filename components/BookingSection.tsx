@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { createBooking } from '../lib/api';
 import { useTranslation } from '../context/LanguageContext';
+import { BOOKING_COM_LISTING_URL } from '../lib/constants';
 import {
   computeStayPriceBreakdown,
   DEFAULT_SEASON_PRICING,
@@ -186,7 +187,7 @@ const BookingSection: React.FC = () => {
               </div>
               <div className="mt-6">
                 <a
-                  href="https://www.booking.com"
+                  href={BOOKING_COM_LISTING_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center space-x-2 w-full py-3 border border-blue-800 text-blue-800 rounded-full hover:bg-blue-50 transition-all font-semibold"
