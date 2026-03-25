@@ -34,6 +34,14 @@ function parseIntSafe(s: string | undefined, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+/** PLN z `settings.value` (tekst lub liczba z przecinkiem). */
+function parsePricePln(s: string | undefined, fallback: number): number {
+  const raw = String(s ?? "").trim().replace(",", ".");
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.round(n * 100) / 100;
+}
+
 /**
  * Build pricing from settings rows. Falls back to `DEFAULT_SEASON_PRICING`.
  * Legacy `price_per_night` is used when `price_per_night_offseason` is absent.
@@ -42,9 +50,9 @@ export function parsePricingRows(rows: Record<string, string>): SeasonPricing {
   const d = DEFAULT_SEASON_PRICING;
   const offPrice = rows["price_per_night_offseason"] ?? rows["price_per_night"];
   return {
-    price_per_night_offseason: parseIntSafe(offPrice, d.price_per_night_offseason),
-    price_per_night_peak: parseIntSafe(rows["price_per_night_peak"], d.price_per_night_peak),
-    price_per_night_holiday: parseIntSafe(rows["price_per_night_holiday"], d.price_per_night_holiday),
+    price_per_night_offseason: parsePricePln(offPrice, d.price_per_night_offseason),
+    price_per_night_peak: parsePricePln(rows["price_per_night_peak"], d.price_per_night_peak),
+    price_per_night_holiday: parsePricePln(rows["price_per_night_holiday"], d.price_per_night_holiday),
     min_nights_offseason: parseIntSafe(rows["min_nights_offseason"], d.min_nights_offseason),
     min_nights_peak: parseIntSafe(rows["min_nights_peak"], d.min_nights_peak),
     min_nights_holiday: parseIntSafe(rows["min_nights_holiday"], d.min_nights_holiday),

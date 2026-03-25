@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "../_shared/supabase.ts";
+import { normalizeDateOnly } from "../_shared/date.ts";
 import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
@@ -53,8 +54,10 @@ Deno.serve(async (req) => {
       return errorResponse("Nieprawidłowy format numeru telefonu.", 400);
     }
 
-    const checkInDate  = new Date(check_in  + "T00:00:00Z");
-    const checkOutDate = new Date(check_out + "T00:00:00Z");
+    const checkInNorm = normalizeDateOnly(check_in);
+    const checkOutNorm = normalizeDateOnly(check_out);
+    const checkInDate  = new Date(checkInNorm  + "T00:00:00Z");
+    const checkOutDate = new Date(checkOutNorm + "T00:00:00Z");
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
@@ -97,8 +100,8 @@ Deno.serve(async (req) => {
       .single();
 
     if (icalSetting?.value) {
-      const icalBlocked = await fetchICalDates(icalSetting.value, check_in, check_out, 3000);
-      const requestedDates = new Set(expandDateRange(check_in, check_out));
+      const icalBlocked = await fetchICalDates(icalSetting.value, checkInNorm, checkOutNorm, 3000);
+      const requestedDates = new Set(expandDateRange(checkInNorm, checkOutNorm));
       const conflict = icalBlocked.find((d) => requestedDates.has(d));
       if (conflict) {
         return errorResponse("Wybrane daty są już zajęte. Proszę wybrać inny termin.", 409);
@@ -111,8 +114,8 @@ Deno.serve(async (req) => {
     );
 
     const pricing = await fetchPricingFromDb(supabaseAdmin);
-    const season = getSeasonConfig(check_in, check_out, pricing);
-    const priceBreakdown = computeStayPriceBreakdown(check_in, check_out, pricing);
+    const season = getSeasonConfig(checkInNorm, checkOutNorm, pricing);
+    const priceBreakdown = computeStayPriceBreakdown(checkInNorm, checkOutNorm, pricing);
     const estimatedPrice = Math.round(priceBreakdown.total * 100) / 100;
 
     if (nights < season.minNights) {
@@ -129,8 +132,8 @@ Deno.serve(async (req) => {
         guest_name: guest_name.trim(),
         guest_email: guest_email.trim().toLowerCase(),
         guest_phone: guest_phone?.trim() || null,
-        check_in,
-        check_out,
+        check_in: checkInNorm,
+        check_out: checkOutNorm,
         guests_count: guestCount,
         total_price: estimatedPrice,
         status: "pending",
@@ -153,8 +156,8 @@ Deno.serve(async (req) => {
       guestName: guest_name.trim(),
       guestEmail: guest_email.trim().toLowerCase(),
       guestPhone: guest_phone?.trim() || null,
-      checkIn: check_in,
-      checkOut: check_out,
+      checkIn: checkInNorm,
+      checkOut: checkOutNorm,
       guestsCount: guestCount,
       nights,
       estimatedPrice,
@@ -162,10 +165,21 @@ Deno.serve(async (req) => {
 
     await log("info", "booking", `Inquiry received: ${booking.id}`, {
       booking_id: booking.id,
-      check_in,
-      check_out,
+      check_in: checkInNorm,
+      check_out: checkOutNorm,
       nights,
       guests_count: guestCount,
+      total_price: estimatedPrice,
+      rates: {
+        off: pricing.price_per_night_offseason,
+        peak: pricing.price_per_night_peak,
+        holiday: pricing.price_per_night_holiday,
+      },
+      breakdown_lines: priceBreakdown.lines.map((l) => ({
+        tier: l.tier,
+        n: l.nights,
+        unit: l.unitPrice,
+      })),
     });
 
     return jsonResponse({

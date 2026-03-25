@@ -4,6 +4,7 @@ import {
   jsonResponse,
   errorResponse,
 } from "../_shared/cors.ts";
+import { normalizeDateOnly } from "../_shared/date.ts";
 import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
 import { fetchPricingFromDb } from "../_shared/pricing.ts";
 
@@ -26,6 +27,9 @@ Deno.serve(async (req) => {
       return errorResponse("Parameters 'from' and 'to' required (YYYY-MM-DD)", 400);
     }
 
+    const fromN = normalizeDateOnly(from);
+    const toN = normalizeDateOnly(to);
+
     // Run DB queries, pricing, and fresh iCal fetch concurrently
     const [pendingResult, confirmedResult, blockedResult, icalDates, pricing] =
       await Promise.all([
@@ -33,23 +37,23 @@ Deno.serve(async (req) => {
           .from("bookings")
           .select("check_in, check_out")
           .eq("status", "pending")
-          .lte("check_in", to)
-          .gte("check_out", from),
+          .lte("check_in", toN)
+          .gte("check_out", fromN),
 
         supabaseAdmin
           .from("bookings")
           .select("check_in, check_out")
           .eq("status", "confirmed")
-          .lte("check_in", to)
-          .gte("check_out", from),
+          .lte("check_in", toN)
+          .gte("check_out", fromN),
 
         supabaseAdmin
           .from("blocked_dates")
           .select("date")
-          .gte("date", from)
-          .lte("date", to),
+          .gte("date", fromN)
+          .lte("date", toN),
 
-        fetchICalFromSettings(from, to),
+        fetchICalFromSettings(fromN, toN),
 
         fetchPricingFromDb(supabaseAdmin),
       ]);
@@ -63,9 +67,9 @@ Deno.serve(async (req) => {
       const co = toDateOnly(b.check_out);
       if (!ci || !co) continue;
       for (const d of expandDateRange(ci, co)) {
-        if (d >= from && d <= to) pendingSet.add(d);
+        if (d >= fromN && d <= toN) pendingSet.add(d);
       }
-      if (co >= from && co <= to) pendingSet.add(co);
+      if (co >= fromN && co <= toN) pendingSet.add(co);
     }
 
     for (const b of confirmedResult.data ?? []) {
@@ -73,12 +77,12 @@ Deno.serve(async (req) => {
       const co = toDateOnly(b.check_out);
       if (!ci || !co) continue;
       for (const d of expandDateRange(ci, co)) {
-        if (d >= from && d <= to) {
+        if (d >= fromN && d <= toN) {
           confirmedSet.add(d);
           pendingSet.delete(d); // confirmed takes priority
         }
       }
-      if (co >= from && co <= to) {
+      if (co >= fromN && co <= toN) {
         confirmedSet.add(co);
         pendingSet.delete(co);
       }

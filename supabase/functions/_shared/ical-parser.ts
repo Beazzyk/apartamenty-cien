@@ -1,3 +1,5 @@
+import { normalizeDateOnly } from "./date.ts";
+
 export interface ICalEvent {
   dtstart: string;
   dtend: string;
@@ -34,9 +36,11 @@ function formatICalDate(raw: string): string {
 
 /** Expand a [start, end) date range into individual YYYY-MM-DD strings. */
 export function expandDateRange(start: string, end: string): string[] {
+  const s = normalizeDateOnly(start);
+  const e = normalizeDateOnly(end);
   const dates: string[] = [];
-  const cursor = new Date(start + "T00:00:00Z");
-  const endDate = new Date(end + "T00:00:00Z");
+  const cursor = new Date(s + "T00:00:00Z");
+  const endDate = new Date(e + "T00:00:00Z");
 
   while (cursor < endDate) {
     dates.push(cursor.toISOString().slice(0, 10));
@@ -77,7 +81,11 @@ export async function fetchICalDates(
       allDates.push(...expandDateRange(ev.dtstart, ev.dtend));
     }
 
-    return filterDatesInRange(allDates, rangeStart, rangeEnd);
+    return filterDatesInRange(
+      allDates,
+      normalizeDateOnly(rangeStart),
+      normalizeDateOnly(rangeEnd),
+    );
   } catch {
     clearTimeout(timer);
     return [];

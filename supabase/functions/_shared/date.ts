@@ -1,0 +1,13 @@
+/**
+ * Stay pricing and iCal use calendar nights in YYYY-MM-DD.
+ * Strips time/zone from ISO strings so we never do `iso + "T00:00:00Z"` (invalid).
+ */
+export function normalizeDateOnly(input: string): string {
+  const s = String(input).trim();
+  if (!s) return s;
+  const dm = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (dm) return dm[1];
+  const t = Date.parse(s);
+  if (!Number.isNaN(t)) return new Date(t).toISOString().slice(0, 10);
+  return s;
+}

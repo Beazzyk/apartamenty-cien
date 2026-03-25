@@ -1,3 +1,5 @@
+import { normalizeDateOnly } from './date';
+
 export type Season = 'holiday' | 'peak' | 'offseason';
 
 /** Wartości z `public.settings` — zsynchronizowane z API check-availability. */
@@ -158,9 +160,11 @@ export function computeStayPriceBreakdown(
   checkOut: string,
   pricing: SeasonPricing,
 ): StayPriceBreakdown {
+  const checkInN = normalizeDateOnly(checkIn);
+  const checkOutN = normalizeDateOnly(checkOut);
   const lines: StayPriceLine[] = [];
-  const cursor = new Date(checkIn + 'T00:00:00Z');
-  const end = new Date(checkOut + 'T00:00:00Z');
+  const cursor = new Date(checkInN + 'T00:00:00Z');
+  const end = new Date(checkOutN + 'T00:00:00Z');
 
   while (cursor < end) {
     const d = cursor.toISOString().slice(0, 10);
@@ -185,8 +189,10 @@ export function computeStayPriceBreakdown(
  * Pierwsza noc w tierze „holiday” (tylko BN/Sylwester) → reguły min. świątecznych.
  */
 export function getSeasonForStay(checkIn: string, checkOut: string): Season {
-  const cursor = new Date(checkIn + 'T00:00:00Z');
-  const end = new Date(checkOut + 'T00:00:00Z');
+  const checkInN = normalizeDateOnly(checkIn);
+  const checkOutN = normalizeDateOnly(checkOut);
+  const cursor = new Date(checkInN + 'T00:00:00Z');
+  const end = new Date(checkOutN + 'T00:00:00Z');
   let hasPeak = false;
 
   while (cursor < end) {
@@ -212,8 +218,10 @@ function isNonMajowkaPeakNight(date: string): boolean {
 }
 
 function stayIncludesNonMajowkaPeakNight(checkIn: string, checkOut: string): boolean {
-  const cursor = new Date(checkIn + 'T00:00:00Z');
-  const end = new Date(checkOut + 'T00:00:00Z');
+  const checkInN = normalizeDateOnly(checkIn);
+  const checkOutN = normalizeDateOnly(checkOut);
+  const cursor = new Date(checkInN + 'T00:00:00Z');
+  const end = new Date(checkOutN + 'T00:00:00Z');
   while (cursor < end) {
     const d = cursor.toISOString().slice(0, 10);
     if (isNonMajowkaPeakNight(d)) return true;
