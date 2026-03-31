@@ -15,7 +15,6 @@ import BookingSection from './components/BookingSection';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import RitualsBadge from './components/RitualsBadge';
-// CookieBanner zastąpiony przez Cookiebot (index.html) — pełna zgodność RODO
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -58,7 +57,6 @@ const App: React.FC = () => {
       </main>
       <Footer />
       <RitualsBadge />
-      {/* Cookiebot renderowany przez index.html */}
     </div>
   );
 };

@@ -171,9 +171,11 @@ const pl = {
     officialNote: 'Oficjalna strona Apartamentu Cień Ducha Gór. Projekt premium dla Szklarskiej Poręby.',
   },
   cookie: {
-    text: 'Ta strona wykorzystuje pliki cookies w celach statystycznych oraz dla zapewnienia prawidłowego działania serwisu. Pozostając na stronie, wyrażasz zgodę na ich użycie. Szczegóły znajdziesz w',
+    ariaLabel: 'Informacja o plikach cookies',
+    text: 'Ta strona używa plików cookies, w tym do anonimowych statystyk (Google Analytics). Możesz zaakceptować statystyki albo ograniczyć się do niezbędnych. Więcej informacji w',
     linkText: 'Polityce prywatności i cookies',
     accept: 'Akceptuję',
+    essentialOnly: 'Tylko niezbędne',
   },
 };
 
@@ -345,9 +347,11 @@ const cz: typeof pl = {
     officialNote: 'Oficiální stránky apartmánu Cień Ducha Gór. Prémiový projekt pro Szklarska Porębu.',
   },
   cookie: {
-    text: 'Tyto stránky používají soubory cookies pro statistické účely a pro zajištění správného fungování webu. Pokračováním na stránce souhlasíte s jejich používáním. Podrobnosti naleznete v',
+    ariaLabel: 'Informace o cookies',
+    text: 'Tyto stránky používají cookies včetně anonymních statistik (Google Analytics). Můžete přijmout statistiky nebo používat jen nezbytné soubory. Více informací v',
     linkText: 'Zásadách ochrany osobních údajů a cookies',
     accept: 'Přijmout',
+    essentialOnly: 'Pouze nezbytné',
   },
 };
 
@@ -519,9 +523,11 @@ const de: typeof pl = {
     officialNote: 'Offizielle Seite des Apartments Cień Ducha Gór. Premium-Projekt für Szklarska Poręba.',
   },
   cookie: {
-    text: 'Diese Website verwendet Cookies für statistische Zwecke und zur Sicherstellung des ordnungsgemäßen Betriebs. Durch die weitere Nutzung stimmen Sie der Verwendung zu. Details finden Sie in unserer',
+    ariaLabel: 'Hinweis zu Cookies',
+    text: 'Diese Website verwendet Cookies, u. a. für anonyme Statistiken (Google Analytics). Sie können Statistik-Cookies akzeptieren oder nur notwendige Cookies nutzen. Mehr in unserer',
     linkText: 'Datenschutzerklärung und Cookie-Richtlinie',
     accept: 'Akzeptieren',
+    essentialOnly: 'Nur notwendige',
   },
 };
 
@@ -693,9 +699,11 @@ const en: typeof pl = {
     officialNote: 'Official website of Cień Ducha Gór Apartment. A premium project for Szklarska Poręba.',
   },
   cookie: {
-    text: 'This website uses cookies for statistical purposes and to ensure the proper functioning of the service. By continuing to use the site, you consent to their use. Details can be found in our',
+    ariaLabel: 'Cookie notice',
+    text: 'This site uses cookies, including for anonymous analytics (Google Analytics). You can accept analytics cookies or use only essential cookies. More in our',
     linkText: 'Privacy Policy and Cookie Policy',
     accept: 'Accept',
+    essentialOnly: 'Essential only',
   },
 };
 

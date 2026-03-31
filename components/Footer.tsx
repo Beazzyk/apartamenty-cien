@@ -150,8 +150,8 @@ const Footer: React.FC = () => {
           <p>© {new Date().getFullYear()} {f.copyright}</p>
           <div className="mt-4 md:mt-0 flex flex-wrap items-center gap-6">
             <Link to="/regulamin" className="hover:text-white transition-colors">{f.regulamin}</Link>
-            <a href="/polityka-prywatnosci" className="hover:text-white transition-colors">{f.privacy}</a>
-            <a href="/polityka-prywatnosci#cookies" className="hover:text-white transition-colors">{f.cookies}</a>
+            <Link to="/polityka-prywatnosci" className="hover:text-white transition-colors">{f.privacy}</Link>
+            <Link to="/polityka-prywatnosci#cookies" className="hover:text-white transition-colors">{f.cookies}</Link>
           </div>
         </div>
       </div>

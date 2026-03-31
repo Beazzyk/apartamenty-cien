@@ -6,6 +6,8 @@ import { LanguageProvider } from './context/LanguageContext';
 import App from './App';
 import RegulaminPage from './components/RegulaminPage';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import CookieBanner from './components/CookieBanner';
+import ScrollToTop from './components/ScrollToTop';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -16,12 +18,14 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <BrowserRouter>
+      <ScrollToTop />
       <LanguageProvider>
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/regulamin" element={<RegulaminPage />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicyPage />} />
         </Routes>
+        <CookieBanner />
       </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>

@@ -47,17 +47,7 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="apple-touch-icon" href="/favicon.png">
 
-    <!-- Cookiebot — consent management (RODO/GDPR) — musi być PRZED innymi skryptami -->
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="6e8fb3ae-638c-4c86-a457-6558509cb216" data-blockingmode="auto" type="text/javascript" async></script>
-
-    <!-- Google Analytics 4 — zablokowane przez Cookiebot do czasu wyrażenia zgody -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC03JX1KGG" data-cookieconsent="statistics"></script>
-    <script data-cookieconsent="statistics">
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-NC03JX1KGG', { anonymize_ip: true });
-    </script>
+    <!-- Google Analytics 4 — ładowany z aplikacji po wyrażeniu zgody w banerze cookies -->
 
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,105 +79,6 @@
       }
       ::-webkit-scrollbar-thumb {
         background: #D2B48C;
-      }
-
-      /* ── Cookiebot — styl dopasowany do marki Cień Ducha Gór ── */
-      #CybotCookiebotDialog {
-        font-family: 'Inter', sans-serif !important;
-        border-radius: 1rem !important;
-        border: 1px solid rgba(166, 138, 100, 0.3) !important;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.5) !important;
-        background-color: #3D352F !important;
-        color: rgba(245, 241, 234, 0.9) !important;
-        max-width: 64rem !important;
-        padding: 1.25rem 1.5rem !important;
-      }
-
-      /* Pasek dolny (banner) */
-      #CybotCookiebotDialogBody,
-      #CybotCookiebotDialogBodyContent {
-        background-color: #3D352F !important;
-        color: rgba(245, 241, 234, 0.9) !important;
-        padding: 0 !important;
-      }
-
-      #CybotCookiebotDialogBodyContentTitle {
-        font-family: 'Playfair Display', serif !important;
-        color: #F5F1EA !important;
-        font-size: 1rem !important;
-        margin-bottom: 0.25rem !important;
-      }
-
-      #CybotCookiebotDialogBodyContentText,
-      #CybotCookiebotDialogBodyContentText p,
-      #CybotCookiebotDialogBodyContentText a {
-        font-size: 0.75rem !important;
-        color: rgba(245, 241, 234, 0.75) !important;
-        line-height: 1.5 !important;
-      }
-
-      #CybotCookiebotDialogBodyContentText a {
-        color: #A68A64 !important;
-        text-decoration: underline !important;
-      }
-
-      /* Przyciski */
-      #CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll,
-      #CybotCookiebotDialogFooter .CybotCookiebotDialogBodyButton {
-        background-color: #A68A64 !important;
-        color: #3D352F !important;
-        border: none !important;
-        border-radius: 9999px !important;
-        font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        padding: 0.5rem 1.25rem !important;
-        cursor: pointer !important;
-        transition: background-color 0.2s !important;
-        font-family: 'Inter', sans-serif !important;
-        text-transform: none !important;
-      }
-
-      #CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll:hover,
-      #CybotCookiebotDialogFooter .CybotCookiebotDialogBodyButton:hover {
-        background-color: #F5F1EA !important;
-      }
-
-      /* Przycisk "Odmów" / "Tylko niezbędne" */
-      #CybotCookiebotDialogBodyLevelButtonLevelOptinDeclineAll,
-      #CybotCookiebotDialogBodyLevelButtonCustomize {
-        background-color: transparent !important;
-        color: rgba(245, 241, 234, 0.5) !important;
-        border: 1px solid rgba(166, 138, 100, 0.3) !important;
-        border-radius: 9999px !important;
-        font-size: 0.75rem !important;
-        padding: 0.5rem 1.25rem !important;
-        font-family: 'Inter', sans-serif !important;
-      }
-
-      #CybotCookiebotDialogBodyLevelButtonLevelOptinDeclineAll:hover,
-      #CybotCookiebotDialogBodyLevelButtonCustomize:hover {
-        border-color: #A68A64 !important;
-        color: #A68A64 !important;
-      }
-
-      /* Ukryj logo Cookiebot */
-      #CybotCookiebotDialogPoweredByText,
-      .CybotCookiebotDialogPoweredByText {
-        display: none !important;
-      }
-
-      /* Overlay tła */
-      #CybotCookiebotDialogBodyUnderlay {
-        background-color: rgba(0,0,0,0.4) !important;
-      }
-
-      /* Pozycja — dolna belka jak obecny baner */
-      #CybotCookiebotDialog {
-        bottom: 1rem !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        top: auto !important;
-        width: calc(100% - 2rem) !important;
       }
     </style>
 <script type="importmap">
