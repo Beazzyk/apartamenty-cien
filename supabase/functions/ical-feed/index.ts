@@ -5,9 +5,10 @@ Deno.serve(async () => {
   try {
     const today = new Date().toISOString().slice(0, 10);
 
+    // Bez PII: kalendarz synchronizowany z zewnętrznymi usługami nie może ujawniać imion gości.
     const { data: bookings, error } = await supabaseAdmin
       .from("bookings")
-      .select("id, check_in, check_out, guest_name, guests_count, status")
+      .select("id, check_in, check_out, status")
       .in("status", ["pending", "confirmed"])
       .gte("check_out", today)
       .order("check_in", { ascending: true });
@@ -35,9 +36,16 @@ interface Booking {
   id: string;
   check_in: string;
   check_out: string;
-  guest_name: string;
-  guests_count: number;
   status: "pending" | "confirmed";
+}
+
+/** RFC 5545 TEXT escaping for SUMMARY / DESCRIPTION. */
+function icalEsc(text: string): string {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\n/g, "\\n");
 }
 
 function generateICal(bookings: Booking[]): string {
@@ -66,11 +74,11 @@ function generateICal(bookings: Booking[]): string {
     // confirmed → STATUS:CONFIRMED  (normal solid event)
     const icalStatus = isPending ? "TENTATIVE" : "CONFIRMED";
     const summary = isPending
-      ? `⏳ Zapytanie – ${b.guest_name} (${b.guests_count} os.)`
-      : `✓ Rezerwacja – ${b.guest_name} (${b.guests_count} os.)`;
+      ? "⏳ Apartament · termin zajęty (oczekuje na potwierdzenie)"
+      : "✓ Apartament · rezerwacja potwierdzona";
     const description = isPending
-      ? `Zapytanie oczekuje na potwierdzenie. Zmień status w Supabase na 'confirmed' lub 'cancelled'.`
-      : `Rezerwacja potwierdzona.`;
+      ? "Zapytanie bezpośrednie – szczegóły tylko w panelu rezerwacji."
+      : "Rezerwacja potwierdzona – szczegóły tylko w panelu rezerwacji.";
 
     lines.push(
       "BEGIN:VEVENT",
@@ -78,8 +86,8 @@ function generateICal(bookings: Booking[]): string {
       `DTEND;VALUE=DATE:${dtend}`,
       `DTSTAMP:${now}Z`,
       `UID:${b.id}@cienduchgor`,
-      `SUMMARY:${summary}`,
-      `DESCRIPTION:${description}`,
+      `SUMMARY:${icalEsc(summary)}`,
+      `DESCRIPTION:${icalEsc(description)}`,
       `STATUS:${icalStatus}`,
       `TRANSP:OPAQUE`,
       "END:VEVENT",
