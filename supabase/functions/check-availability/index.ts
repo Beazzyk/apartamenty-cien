@@ -16,7 +16,7 @@ function toDateOnly(s: string | null | undefined): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+  if (req.method === "OPTIONS") return corsResponse(req);
 
   try {
     const url = new URL(req.url);
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const to = url.searchParams.get("to");
 
     if (!from || !to) {
-      return errorResponse("Parameters 'from' and 'to' required (YYYY-MM-DD)", 400);
+      return errorResponse("Parameters 'from' and 'to' required (YYYY-MM-DD)", req, 400);
     }
 
     const fromN = normalizeDateOnly(from);
@@ -103,10 +103,10 @@ Deno.serve(async (req) => {
       blocked_dates:   [...blockedSet].sort(),
       price_per_night: pricing.price_per_night_offseason,
       pricing,
-    });
+    }, req);
   } catch (error) {
     console.error("[check-availability]", error);
-    return errorResponse("Internal server error");
+    return errorResponse("Internal server error", req, 500);
   }
 });
 

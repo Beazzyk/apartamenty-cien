@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { log } from "../_shared/logger.ts";
+import { corsHeadersForRequest, jsonResponseWithCors } from "../_shared/cors.ts";
 
 const SITE_URL   = Deno.env.get("SITE_URL") ?? "https://cienduchagor.pl";
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "Cień Ducha Gór <onboarding@resend.dev>";
@@ -18,8 +19,15 @@ function esc(s: unknown): string {
 
 // ── Router ───────────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeadersForRequest(req) });
+  }
+
   if (req.method === "GET") {
-    const url    = new URL(req.url);
+    const url = new URL(req.url);
+    if (url.searchParams.get("format") === "json") {
+      return await handleGetJson(req, url);
+    }
     const action = url.searchParams.get("action");
     const token  = url.searchParams.get("token");
     return await handleGet(action, token);
@@ -29,6 +37,15 @@ Deno.serve(async (req) => {
     const ct = req.headers.get("content-type") ?? "";
     let action: string | null = null;
     let token:  string | null = null;
+
+    if (ct.includes("application/json")) {
+      try {
+        const body = await req.json();
+        action = body.action;
+        token  = body.token;
+      } catch { /* ignore */ }
+      return await handlePostJson(req, action, token);
+    }
 
     if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
       const form = await req.formData();
@@ -47,10 +64,10 @@ Deno.serve(async (req) => {
   return htmlPage("Niedozwolona metoda", "Użyj przeglądarki, aby otworzyć ten link.", "error");
 });
 
-// ── GET: show branded confirmation page (no action performed yet) ─────────────
+// ── GET: show branded page (no action performed yet) ─────────────────────────
 async function handleGet(action: string | null, token: string | null): Promise<Response> {
-  if (!token || (action !== "confirm" && action !== "cancel")) {
-    return htmlPage("Nieprawidłowy link", "Brakuje wymaganych parametrów lub link jest niepoprawny.", "error");
+  if (!token) {
+    return htmlPage("Nieprawidłowy link", "Brakuje tokenu w linku lub link jest niepoprawny.", "error");
   }
 
   const booking = await fetchBooking(token);
@@ -66,7 +83,78 @@ async function handleGet(action: string | null, token: string | null): Promise<R
     return htmlPage("Link wygasł", `Ten link zarządzania wygasł. Linki są ważne ${TOKEN_TTL_DAYS} dni od daty zapytania.`, "error");
   }
 
-  return renderConfirmPage(booking, action, token);
+  if (action === "confirm" || action === "cancel") {
+    return renderConfirmPage(booking, action, token);
+  }
+
+  return renderReviewPage(booking, token);
+}
+
+// ── GET ?format=json — podgląd dla strony na własnej domenie (fetch + CORS) ───
+async function handleGetJson(req: Request, url: URL): Promise<Response> {
+  const token = url.searchParams.get("token");
+
+  if (!token) {
+    return jsonResponseWithCors(
+      { ok: false, error: "invalid_params", message: "Brakuje tokenu w linku lub link jest niepoprawny." },
+      req,
+      400,
+    );
+  }
+
+  const booking = await fetchBooking(token);
+  if (!booking) {
+    return jsonResponseWithCors(
+      { ok: false, error: "not_found", message: "Link jest nieprawidłowy. Sprawdź skrzynkę odbiorczą ponownie." },
+      req,
+      404,
+    );
+  }
+
+  if (booking.status !== "pending") {
+    return jsonResponseWithCors(
+      {
+        ok: true,
+        state: "already_processed",
+        status: booking.status,
+        booking: {
+          guest_name: booking.guest_name,
+          check_in: booking.check_in,
+          check_out: booking.check_out,
+          guests_count: booking.guests_count,
+          total_price: booking.total_price,
+        },
+      },
+      req,
+    );
+  }
+
+  if (isTokenExpired(booking.created_at)) {
+    return jsonResponseWithCors(
+      {
+        ok: false,
+        error: "expired",
+        message: `Ten link zarządzania wygasł. Linki są ważne ${TOKEN_TTL_DAYS} dni od daty zapytania.`,
+      },
+      req,
+      410,
+    );
+  }
+
+  return jsonResponseWithCors(
+    {
+      ok: true,
+      state: "pending",
+      booking: {
+        guest_name: booking.guest_name,
+        check_in: booking.check_in,
+        check_out: booking.check_out,
+        guests_count: booking.guests_count,
+        total_price: booking.total_price,
+      },
+    },
+    req,
+  );
 }
 
 // ── POST: perform the actual action ──────────────────────────────────────────
@@ -123,6 +211,98 @@ async function handlePost(action: string | null, token: string | null): Promise<
       "info",
     );
   }
+}
+
+// ── POST JSON — ta sama logika co handlePost, odpowiedź dla React na własnej domenie ──
+async function handlePostJson(req: Request, action: string | null, token: string | null): Promise<Response> {
+  if (!token || (action !== "confirm" && action !== "cancel")) {
+    return jsonResponseWithCors(
+      { ok: false, error: "invalid_params", message: "Brakuje wymaganych parametrów." },
+      req,
+      400,
+    );
+  }
+
+  const booking = await fetchBooking(token);
+  if (!booking) {
+    return jsonResponseWithCors(
+      { ok: false, error: "not_found", message: "Link jest nieprawidłowy lub wygasł." },
+      req,
+      404,
+    );
+  }
+
+  if (booking.status !== "pending") {
+    return jsonResponseWithCors(
+      {
+        ok: true,
+        result: "already_processed",
+        status: booking.status,
+        title: "Rezerwacja już przetworzona",
+        message: `Rezerwacja dla ${booking.guest_name} (${booking.check_in} – ${booking.check_out}) jest już przetworzona.`,
+        variant: booking.status === "confirmed" ? "success" : "info",
+      },
+      req,
+    );
+  }
+
+  if (isTokenExpired(booking.created_at)) {
+    return jsonResponseWithCors(
+      {
+        ok: false,
+        error: "expired",
+        message: `Ten link zarządzania wygasł. Linki są ważne ${TOKEN_TTL_DAYS} dni.`,
+      },
+      req,
+      410,
+    );
+  }
+
+  const newStatus = action === "confirm" ? "confirmed" : "cancelled";
+
+  const { error: updateErr } = await supabaseAdmin
+    .from("bookings")
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq("id", booking.id)
+    .eq("status", "pending");
+
+  if (updateErr) {
+    await log("error", "manage-booking", `Update failed for ${booking.id}`, { error: String(updateErr) });
+    return jsonResponseWithCors(
+      { ok: false, error: "server", message: "Nie udało się zaktualizować rezerwacji. Spróbuj ponownie." },
+      req,
+      500,
+    );
+  }
+
+  await log("info", "manage-booking", `Booking ${booking.id} → ${newStatus}`, { booking_id: booking.id, action });
+  await sendGuestEmail(booking, newStatus);
+
+  if (action === "confirm") {
+    return jsonResponseWithCors(
+      {
+        ok: true,
+        result: "confirmed",
+        title: "Rezerwacja potwierdzona ✓",
+        message:
+          `Rezerwacja dla ${booking.guest_name} (${booking.check_in} – ${booking.check_out}, ${booking.guests_count} os.) została potwierdzona. Gość otrzymał e-mail z potwierdzeniem.`,
+        variant: "success",
+      },
+      req,
+    );
+  }
+
+  return jsonResponseWithCors(
+    {
+      ok: true,
+      result: "cancelled",
+      title: "Rezerwacja anulowana",
+      message:
+        `Rezerwacja dla ${booking.guest_name} (${booking.check_in} – ${booking.check_out}) została anulowana. Gość otrzymał e-mail z informacją.`,
+      variant: "info",
+    },
+    req,
+  );
 }
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
@@ -217,6 +397,60 @@ function renderConfirmPage(booking: BookingRow, action: string, token: string): 
       <button type="submit" class="btn">${btnLabel}</button>
     </form>
     <a href="${esc(SITE_URL)}" class="btn-back">Wróć na stronę</a>
+  </div>
+</body>
+</html>`;
+
+  return new Response(body, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } });
+}
+
+/** Strona z oboma akcjami (link z maila: tylko token) — stary HTML bez React. */
+function renderReviewPage(booking: BookingRow, token: string): Response {
+  const body = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nowe zapytanie – Cień Ducha Gór</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; background: #F5F0E8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: #FDFBF7; border: 1px solid #D2B48C; border-radius: 16px; padding: 48px 40px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #A68A64; margin-bottom: 8px; font-family: sans-serif; }
+    h1 { font-size: 22px; color: #3D352F; margin-bottom: 16px; line-height: 1.3; }
+    .desc { font-size: 15px; color: #3D352F; line-height: 1.7; margin-bottom: 24px; }
+    .details { background: #F5F0E8; border-radius: 8px; padding: 16px 20px; margin: 0 0 28px; text-align: left; font-size: 14px; color: #3D352F; line-height: 2; }
+    .btn { display: block; width: 100%; padding: 16px; border: none; border-radius: 50px; font-size: 15px; font-weight: bold; font-family: sans-serif; cursor: pointer; color: #fff; margin-bottom: 12px; }
+    .btn-ok { background: #22C55E; }
+    .btn-ok:hover { opacity: 0.92; }
+    .btn-no { background: #EF4444; }
+    .btn-no:hover { opacity: 0.92; }
+    .btn-back { display: inline-block; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-family: sans-serif; color: #3D352F; background: #F5F0E8; border: 1px solid #D2B48C; text-decoration: none; }
+    .btn-back:hover { background: #D2B48C; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="label">Apartament Cień Ducha Gór</div>
+    <h1>Nowe zapytanie o rezerwację</h1>
+    <p class="desc">Wybierz akcję — gość otrzyma odpowiednią wiadomość e-mail.</p>
+    <div class="details">
+      <strong>Gość:</strong> ${esc(booking.guest_name)}<br>
+      <strong>Termin:</strong> ${esc(booking.check_in)} – ${esc(booking.check_out)}<br>
+      <strong>Osób:</strong> ${esc(booking.guests_count)}<br>
+      <strong>Kwota:</strong> ${esc(booking.total_price)} PLN
+    </div>
+    <form method="POST" style="margin-bottom:12px;">
+      <input type="hidden" name="action" value="confirm">
+      <input type="hidden" name="token" value="${esc(token)}">
+      <button type="submit" class="btn btn-ok">✓ POTWIERDŹ REZERWACJĘ</button>
+    </form>
+    <form method="POST">
+      <input type="hidden" name="action" value="cancel">
+      <input type="hidden" name="token" value="${esc(token)}">
+      <button type="submit" class="btn btn-no">✕ ODRZUĆ REZERWACJĘ</button>
+    </form>
+    <a href="${esc(SITE_URL)}" class="btn-back" style="margin-top:20px;">Wróć na stronę</a>
   </div>
 </body>
 </html>`;

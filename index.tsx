@@ -6,6 +6,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import App from './App';
 import RegulaminPage from './components/RegulaminPage';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import ManageBookingPage from './components/ManageBookingPage';
 import CookieBanner from './components/CookieBanner';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -24,6 +25,7 @@ root.render(
           <Route path="/" element={<App />} />
           <Route path="/regulamin" element={<RegulaminPage />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicyPage />} />
+          <Route path="/rezerwacja/zarzadzaj" element={<ManageBookingPage />} />
         </Routes>
         <CookieBanner />
       </LanguageProvider>

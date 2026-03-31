@@ -29,6 +29,8 @@ echo "=== Deploying Edge Functions ==="
 # Public functions (no JWT required - called from frontend)
 supabase functions deploy check-availability --no-verify-jwt
 supabase functions deploy create-booking --no-verify-jwt
+# manage-booking: linki z e-maila (GET/POST bez nagłówka Authorization — weryfikacja przez token)
+supabase functions deploy manage-booking --no-verify-jwt
 supabase functions deploy ical-feed --no-verify-jwt
 
 # Stripe webhook (no JWT - verifies Stripe signature instead)

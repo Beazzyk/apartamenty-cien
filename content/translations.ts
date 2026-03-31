@@ -158,6 +158,52 @@ const pl = {
     contactTitle: 'Kontakt bezpośredni',
     contactDesc: 'Po złożeniu zapytania skontaktujemy się z Tobą osobiście i ustalimy wszystkie szczegóły.',
   },
+  manageBooking: {
+    landingTitle: 'Zarządzanie zapytaniem o rezerwację',
+    landingIntro:
+      'Ta strona służy do potwierdzania lub odrzucania zapytań złożonych przez formularz na naszej stronie. Zapytania są od razu zapisywane w naszym systemie rezerwacji.',
+    landingBullet1:
+      'Nowe zapytanie ma status „oczekujące” (pending), dopóki nie podejmiesz decyzji — wtedy status zmienia się na potwierdzone lub anulowane.',
+    landingBullet2:
+      'W e-mailu z powiadomieniem jest przycisk „Zobacz rezerwację”, który prowadzi na tę stronę ze szczegółami pobytu.',
+    landingBullet3:
+      'Po zatwierdzeniu decyzji na tej stronie system jest aktualizowany automatycznie, a gość dostaje wiadomość e-mail.',
+    stepHintTitle: 'Jak to działa?',
+    stepHintBody:
+      'W mailu klikasz „Zobacz rezerwację” i trafiasz tutaj. Dopiero wybór zielonego (potwierdź) lub czerwonego (odrzuć) przycisku zapisuje decyzję w systemie i wysyła maila do gościa.',
+    doneSystemNote: 'Status w systemie rezerwacji został zaktualizowany; gość otrzymał powiadomienie e-mail.',
+    loading: 'Wczytywanie…',
+    badLinkTitle: 'Nieprawidłowy link',
+    badLinkBody: 'Brakuje wymaganych parametrów albo link jest niepoprawny lub niekompletny.',
+    errorTitle: 'Problem z rezerwacją',
+    errorHint:
+      'Jeśli link pochodzi ze starszej wiadomości, otwórz najnowszy e-mail lub skontaktuj się bezpośrednio.',
+    errorNetwork: 'Nie udało się połączyć z serwerem. Sprawdź połączenie z internetem i spróbuj ponownie.',
+    errorServer: 'Serwer nie mógł zapisać decyzji. Odśwież stronę lub spróbuj ponownie za chwilę.',
+    errorUnauthorized:
+      'Serwer odrzucił żądanie (autoryzacja). Jeśli problem się powtarza, potrzebna jest aktualizacja konfiguracji — napisz do osoby zarządzającej stroną.',
+    alreadyTitle: 'Rezerwacja już przetworzona',
+    statusConfirmed: 'potwierdzona',
+    statusCancelled: 'anulowana',
+    previewBadge: 'Apartament · zarządzanie zapytaniem',
+    reviewHeading: 'Nowe zapytanie o rezerwację',
+    reviewIntro:
+      'Wybierz jedną z opcji — gość otrzyma automatyczną wiadomość e-mail z wynikiem (potwierdzenie albo informacja o odrzuceniu).',
+    confirmHeading: 'Potwierdzenie rezerwacji',
+    rejectHeading: 'Odrzucenie rezerwacji',
+    confirmIntro: 'Czy na pewno chcesz potwierdzić tę rezerwację? Gość otrzyma e-mail z potwierdzeniem.',
+    rejectIntro: 'Czy na pewno chcesz odrzucić tę rezerwację? Gość otrzyma e-mail z informacją.',
+    btnConfirm: '✓ Potwierdź rezerwację',
+    btnReject: '✕ Odrzuć rezerwację',
+    btnWorking: 'Przetwarzanie…',
+    guestLabel: 'Gość',
+    datesLabel: 'Termin',
+    guestsShortLabel: 'Osób',
+    amountLabel: 'Kwota',
+    statusLabel: 'Status',
+    home: 'Strona główna',
+    brandHome: 'Cień Ducha Gór',
+  },
   footer: {
     tagline: 'Luksusowy apartament stworzony przez pasjonata gór i literatury. Odkryj miejsce, gdzie każdy detal ma znaczenie.',
     navigation: 'Nawigacja',
@@ -333,6 +379,52 @@ const cz: typeof pl = {
     syncDesc: 'Náš kalendář je průběžně synchronizován s Booking.com. Zobrazená data jsou vždy aktuální.',
     contactTitle: 'Přímý kontakt',
     contactDesc: 'Po odeslání poptávky vás osobně kontaktujeme a domluvíme vše potřebné.',
+  },
+  manageBooking: {
+    landingTitle: 'Správa poptávky o rezervaci',
+    landingIntro:
+      'Tato stránka slouží k potvrzení nebo zamítnutí poptávek odeslaných z formuláře na našich stránkách. Poptávky se okamžitě ukládají do našeho rezervačního systému.',
+    landingBullet1:
+      'Nová poptávka má stav „čekající“ (pending), dokud se nerozhodnete — poté se stav změní na potvrzeno nebo zrušeno.',
+    landingBullet2:
+      'V e-mailu s upozorněním je tlačítko „Zobrazit rezervaci“, které vás přivede sem s podrobnostmi pobytu.',
+    landingBullet3:
+      'Po potvrzení rozhodnutí na této stránce se systém aktualizuje automaticky a host obdrží e-mail.',
+    stepHintTitle: 'Jak to funguje?',
+    stepHintBody:
+      'V e-mailu kliknete na „Zobrazit rezervaci“ a dostanete se sem. Teprve volba zeleného (potvrdit) nebo červeného (zamítnout) tlačítka uloží rozhodnutí do systému a odešle e-mail hostu.',
+    doneSystemNote: 'Stav v rezervačním systému byl aktualizován; host obdržel e-mailové upozornění.',
+    loading: 'Načítání…',
+    badLinkTitle: 'Neplatný odkaz',
+    badLinkBody: 'Chybí požadované parametry nebo je odkaz neúplný či nesprávný.',
+    errorTitle: 'Problém s rezervací',
+    errorHint:
+      'Pokud odkaz pochází ze starší zprávy, otevřete nejnovější e-mail nebo nás kontaktujte přímo.',
+    errorNetwork: 'Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste znovu.',
+    errorServer: 'Server nemohl uložit rozhodnutí. Obnovte stránku nebo zkuste později.',
+    errorUnauthorized:
+      'Server odmítl požadavek (autorizace). Pokud se to opakuje, je potřeba aktualizovat konfiguraci.',
+    alreadyTitle: 'Rezervace již byla zpracována',
+    statusConfirmed: 'potvrzena',
+    statusCancelled: 'zrušena',
+    previewBadge: 'Apartmán · správa poptávky',
+    reviewHeading: 'Nová poptávka o rezervaci',
+    reviewIntro:
+      'Vyberte jednu z možností — host automaticky obdrží e-mail s výsledkem (potvrzení nebo zamítnutí).',
+    confirmHeading: 'Potvrzení rezervace',
+    rejectHeading: 'Zamítnutí rezervace',
+    confirmIntro: 'Opravdu chcete tuto rezervaci potvrdit? Host obdrží potvrzovací e-mail.',
+    rejectIntro: 'Opravdu chcete tuto rezervaci zamítnout? Host obdrží informační e-mail.',
+    btnConfirm: '✓ Potvrdit rezervaci',
+    btnReject: '✕ Zamítnout rezervaci',
+    btnWorking: 'Zpracování…',
+    guestLabel: 'Host',
+    datesLabel: 'Termín',
+    guestsShortLabel: 'Osob',
+    amountLabel: 'Částka',
+    statusLabel: 'Stav',
+    home: 'Domovská stránka',
+    brandHome: 'Cień Ducha Gór',
   },
   footer: {
     tagline: 'Luxusní apartmán vytvořený nadšencem hor a literatury. Objevte místo, kde každý detail má svůj význam.',
@@ -510,6 +602,52 @@ const de: typeof pl = {
     contactTitle: 'Direktkontakt',
     contactDesc: 'Nach dem Absenden der Anfrage kontaktieren wir Sie persönlich und klären alle Details.',
   },
+  manageBooking: {
+    landingTitle: 'Anfrage zur Buchung verwalten',
+    landingIntro:
+      'Diese Seite dient dazu, Anfragen aus dem Formular auf unserer Website zu bestätigen oder abzulehnen. Anfragen werden sofort in unserem Reservierungssystem gespeichert.',
+    landingBullet1:
+      'Neue Anfragen haben den Status „ausstehend“ (pending), bis Sie entscheiden — danach wird der Status auf bestätigt oder storniert gesetzt.',
+    landingBullet2:
+      'In der Benachrichtigungs-E-Mail gibt es den Button „Reservierung ansehen“, der Sie hierher mit den Aufenthaltsdetails führt.',
+    landingBullet3:
+      'Nachdem Sie hier entschieden haben, wird das System automatisch aktualisiert und der Gast erhält eine E-Mail.',
+    stepHintTitle: 'So funktioniert es',
+    stepHintBody:
+      'In der E-Mail klicken Sie auf „Reservierung ansehen“ und landen hier. Erst die Wahl des grünen (bestätigen) oder roten (ablehnen) Buttons speichert die Entscheidung und sendet eine E-Mail an den Gast.',
+    doneSystemNote: 'Der Status im Reservierungssystem wurde aktualisiert; der Gast wurde per E-Mail informiert.',
+    loading: 'Wird geladen…',
+    badLinkTitle: 'Ungültiger Link',
+    badLinkBody: 'Erforderliche Parameter fehlen oder der Link ist unvollständig bzw. falsch.',
+    errorTitle: 'Problem mit der Reservierung',
+    errorHint:
+      'Wenn der Link aus einer älteren Nachricht stammt, öffnen Sie die neueste E-Mail oder kontaktieren Sie uns direkt.',
+    errorNetwork: 'Keine Verbindung zum Server. Bitte Internet prüfen und erneut versuchen.',
+    errorServer: 'Der Server konnte die Entscheidung nicht speichern. Seite neu laden oder später erneut versuchen.',
+    errorUnauthorized:
+      'Der Server hat die Anfrage abgewiesen (Autorisierung). Wiederholt: Konfiguration muss angepasst werden.',
+    alreadyTitle: 'Reservierung bereits bearbeitet',
+    statusConfirmed: 'bestätigt',
+    statusCancelled: 'storniert',
+    previewBadge: 'Apartment · Anfrage verwalten',
+    reviewHeading: 'Neue Buchungsanfrage',
+    reviewIntro:
+      'Wählen Sie eine Option — der Gast erhält automatisch eine E-Mail mit dem Ergebnis (Bestätigung oder Ablehnung).',
+    confirmHeading: 'Reservierung bestätigen',
+    rejectHeading: 'Reservierung ablehnen',
+    confirmIntro: 'Möchten Sie diese Reservierung wirklich bestätigen? Der Gast erhält eine Bestätigungs-E-Mail.',
+    rejectIntro: 'Möchten Sie diese Reservierung wirklich ablehnen? Der Gast erhält eine Info-E-Mail.',
+    btnConfirm: '✓ Reservierung bestätigen',
+    btnReject: '✕ Reservierung ablehnen',
+    btnWorking: 'Wird verarbeitet…',
+    guestLabel: 'Gast',
+    datesLabel: 'Zeitraum',
+    guestsShortLabel: 'Personen',
+    amountLabel: 'Betrag',
+    statusLabel: 'Status',
+    home: 'Startseite',
+    brandHome: 'Cień Ducha Gór',
+  },
   footer: {
     tagline: 'Luxuriöses Apartment, geschaffen von einem Bergliebhaber und Literaturenthusiasten. Entdecken Sie einen Ort, wo jedes Detail zählt.',
     navigation: 'Navigation',
@@ -685,6 +823,52 @@ const en: typeof pl = {
     syncDesc: 'Our calendar is continuously synced with Booking.com. Dates shown are always up to date.',
     contactTitle: 'Direct contact',
     contactDesc: 'After submitting your enquiry, we will contact you personally to finalise all details.',
+  },
+  manageBooking: {
+    landingTitle: 'Manage a booking enquiry',
+    landingIntro:
+      'This page is used to accept or decline enquiries submitted through the form on our website. Enquiries are saved immediately in our reservation system.',
+    landingBullet1:
+      'A new enquiry stays “pending” until you decide — then the status becomes confirmed or cancelled.',
+    landingBullet2:
+      'The notification email has a “View reservation” button that takes you here with the stay details.',
+    landingBullet3:
+      'Once you confirm your decision on this page, the system updates automatically and the guest receives an email.',
+    stepHintTitle: 'How it works',
+    stepHintBody:
+      'In the email you click “View reservation” to open this page. Only the green (confirm) or red (decline) button saves your decision and emails the guest.',
+    doneSystemNote: 'The reservation system has been updated; the guest has been notified by email.',
+    loading: 'Loading…',
+    badLinkTitle: 'Invalid link',
+    badLinkBody: 'Required parameters are missing or the link is incomplete or incorrect.',
+    errorTitle: 'Something went wrong',
+    errorHint:
+      'If the link is from an older message, open the latest email or contact us directly.',
+    errorNetwork: 'Could not reach the server. Check your connection and try again.',
+    errorServer: 'The server could not save your decision. Refresh the page or try again shortly.',
+    errorUnauthorized:
+      'The server rejected the request (authorisation). If this keeps happening, the site configuration needs updating.',
+    alreadyTitle: 'Enquiry already processed',
+    statusConfirmed: 'confirmed',
+    statusCancelled: 'cancelled',
+    previewBadge: 'Apartment · enquiry management',
+    reviewHeading: 'New booking enquiry',
+    reviewIntro:
+      'Choose an option — the guest will automatically receive an email with the outcome (confirmation or decline).',
+    confirmHeading: 'Confirm reservation',
+    rejectHeading: 'Decline reservation',
+    confirmIntro: 'Do you want to confirm this reservation? The guest will receive a confirmation email.',
+    rejectIntro: 'Do you want to decline this reservation? The guest will receive an information email.',
+    btnConfirm: '✓ Confirm reservation',
+    btnReject: '✕ Decline reservation',
+    btnWorking: 'Processing…',
+    guestLabel: 'Guest',
+    datesLabel: 'Dates',
+    guestsShortLabel: 'Guests',
+    amountLabel: 'Amount',
+    statusLabel: 'Status',
+    home: 'Home',
+    brandHome: 'Cień Ducha Gór',
   },
   footer: {
     tagline: 'A luxury apartment created by a mountain and literature enthusiast. Discover a place where every detail matters.',

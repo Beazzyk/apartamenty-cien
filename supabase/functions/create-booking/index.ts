@@ -16,12 +16,15 @@ function esc(s: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
-const FUNCTIONS_URL = Deno.env.get("SUPABASE_URL")
-  ? `${Deno.env.get("SUPABASE_URL")}/functions/v1`
-  : "";
+/** W atrybucie href surowe „&” w query psuje HTML w wielu klientach pocztowych (obcinana treść, brak przycisków). */
+function hrefAmp(url: string): string {
+  return url.replace(/&/g, "&amp;");
+}
+
+const SITE_BASE = (Deno.env.get("SITE_URL") ?? "https://cienduchagor.pl").replace(/\/$/, "");
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+  if (req.method === "OPTIONS") return corsResponse(req);
 
   try {
     const body = await req.json();
@@ -29,29 +32,29 @@ Deno.serve(async (req) => {
 
     // --- Validation ---
     if (!guest_name?.trim() || !guest_email?.trim() || !check_in || !check_out) {
-      return errorResponse("Wymagane pola: imię, e-mail, data przyjazdu, data wyjazdu", 400);
+      return errorResponse("Wymagane pola: imię, e-mail, data przyjazdu, data wyjazdu", req, 400);
     }
 
     // Length limits (M-1)
     if (guest_name.trim().length > 200) {
-      return errorResponse("Imię i nazwisko jest zbyt długie.", 400);
+      return errorResponse("Imię i nazwisko jest zbyt długie.", req, 400);
     }
     if (guest_email.trim().length > 254) {
-      return errorResponse("Adres e-mail jest zbyt długi.", 400);
+      return errorResponse("Adres e-mail jest zbyt długi.", req, 400);
     }
     if (guest_phone && guest_phone.length > 30) {
-      return errorResponse("Numer telefonu jest zbyt długi.", 400);
+      return errorResponse("Numer telefonu jest zbyt długi.", req, 400);
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(guest_email)) {
-      return errorResponse("Nieprawidłowy adres e-mail", 400);
+      return errorResponse("Nieprawidłowy adres e-mail", req, 400);
     }
 
     // Phone format (L-3)
     const phoneRegex = /^\+?[\d\s\-(). ]{7,20}$/;
     if (guest_phone?.trim() && !phoneRegex.test(guest_phone.trim())) {
-      return errorResponse("Nieprawidłowy format numeru telefonu.", 400);
+      return errorResponse("Nieprawidłowy format numeru telefonu.", req, 400);
     }
 
     const checkInNorm = normalizeDateOnly(check_in);
@@ -62,20 +65,20 @@ Deno.serve(async (req) => {
     today.setUTCHours(0, 0, 0, 0);
 
     if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
-      return errorResponse("Nieprawidłowy format daty.", 400);
+      return errorResponse("Nieprawidłowy format daty.", req, 400);
     }
     if (checkOutDate <= checkInDate) {
-      return errorResponse("Data wyjazdu musi być po dacie przyjazdu", 400);
+      return errorResponse("Data wyjazdu musi być po dacie przyjazdu", req, 400);
     }
     if (checkInDate < today) {
-      return errorResponse("Nie można rezerwować dat z przeszłości", 400);
+      return errorResponse("Nie można rezerwować dat z przeszłości", req, 400);
     }
 
     // Max 2 years in future (M-1)
     const maxFuture = new Date();
     maxFuture.setFullYear(maxFuture.getFullYear() + 2);
     if (checkInDate > maxFuture) {
-      return errorResponse("Data przyjazdu nie może być odleglejsza niż 2 lata.", 400);
+      return errorResponse("Data przyjazdu nie może być odleglejsza niż 2 lata.", req, 400);
     }
 
     // Rate limiting: max 3 pending bookings per email per 24h (H-2)
@@ -87,7 +90,7 @@ Deno.serve(async (req) => {
       .eq("status", "pending")
       .gte("created_at", oneDayAgo);
     if ((pendingCount ?? 0) >= 3) {
-      return errorResponse("Zbyt wiele zapytań z tego adresu e-mail. Spróbuj ponownie po 24 godzinach.", 429);
+      return errorResponse("Zbyt wiele zapytań z tego adresu e-mail. Spróbuj ponownie po 24 godzinach.", req, 429);
     }
 
     const guestCount = Math.min(Math.max(parseInt(guests_count) || 2, 1), 6);
@@ -104,7 +107,7 @@ Deno.serve(async (req) => {
       const requestedDates = new Set(expandDateRange(checkInNorm, checkOutNorm));
       const conflict = icalBlocked.find((d) => requestedDates.has(d));
       if (conflict) {
-        return errorResponse("Wybrane daty są już zajęte. Proszę wybrać inny termin.", 409);
+        return errorResponse("Wybrane daty są już zajęte. Proszę wybrać inny termin.", req, 409);
       }
     }
 
@@ -121,6 +124,7 @@ Deno.serve(async (req) => {
     if (nights < season.minNights) {
       return errorResponse(
         `Dla wybranego terminu (${season.label}) wymagane są minimum ${season.minNights} ${season.minNights < 5 ? "noce" : "nocy"}.`,
+        req,
         400,
       );
     }
@@ -144,7 +148,7 @@ Deno.serve(async (req) => {
 
     if (bookingError) {
       if (bookingError.code === "23P01") {
-        return errorResponse("Wybrane daty nie są już dostępne. Proszę wybrać inny termin.", 409);
+        return errorResponse("Wybrane daty nie są już dostępne. Proszę wybrać inny termin.", req, 409);
       }
       throw bookingError;
     }
@@ -192,13 +196,13 @@ Deno.serve(async (req) => {
         unit_price: l.unitPrice,
         subtotal: l.subtotal,
       })),
-    });
+    }, req);
   } catch (error) {
     await log("error", "booking", `Create booking failed: ${error.message}`, {
       error: String(error),
     });
     console.error("[create-booking]", error);
-    return errorResponse("Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się bezpośrednio.");
+    return errorResponse("Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się bezpośrednio.", req, 500);
   }
 });
 
@@ -242,18 +246,32 @@ async function sendNotifications(data: NotificationData): Promise<void> {
   const safePrice  = esc(data.estimatedPrice);
   const safeId     = esc(data.bookingId);
 
-  const confirmUrl = `${FUNCTIONS_URL}/manage-booking?action=confirm&token=${data.managementToken}`;
-  const cancelUrl  = `${FUNCTIONS_URL}/manage-booking?action=cancel&token=${data.managementToken}`;
+  const tokenEnc = encodeURIComponent(String(data.managementToken ?? ""));
+  const viewUrlPlain = `${SITE_BASE}/rezerwacja/zarzadzaj?token=${tokenEnc}`;
+  const viewHref = hrefAmp(viewUrlPlain);
 
-  // --- Email do właściciela z przyciskami akcji ---
+  // --- Email do właściciela: jeden przycisk → strona z potwierdzeniem / odrzuceniem ---
   if (ownerEmail) {
-    const ownerHtml = `
+    const ownerText =
+      `Nowe zapytanie o rezerwację — Apartament Cień Ducha Gór\n\n` +
+      `Termin: ${data.checkIn} → ${data.checkOut}\n` +
+      `Noce: ${data.nights} ${nightsLabel}\n` +
+      `Goście: ${data.guestsCount}\n` +
+      `Szac. cena: ${data.estimatedPrice} PLN\n\n` +
+      `Gość: ${data.guestName}\n` +
+      `E-mail: ${data.guestEmail}\n` +
+      `Telefon: ${phoneText}\n\n` +
+      `Otwórz stronę z rezerwacją (skopiuj do przeglądarki):\n${viewUrlPlain}\n\n` +
+      `Na stronie możesz potwierdzić lub odrzucić zapytanie.\n\n` +
+      `ID: ${data.bookingId}`;
+
+    const ownerInner = `
 <div style="font-family:Georgia,serif;max-width:620px;margin:0 auto;background:#FDFBF7;padding:40px;border-radius:12px;border:1px solid #D2B48C;">
   <h1 style="color:#3D352F;font-size:22px;margin:0 0 4px;">Nowe zapytanie o rezerwację</h1>
   <p style="color:#A68A64;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 24px;">Apartament Cień Ducha Gór</p>
   <hr style="border:none;border-top:1px solid #D2B48C;margin:0 0 24px;">
 
-  <table style="width:100%;border-collapse:collapse;font-size:14px;">
+  <table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px;">
     <tr style="background:#F5F0E8;">
       <td colspan="2" style="padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#A68A64;font-weight:bold;">Termin pobytu</td>
     </tr>
@@ -296,34 +314,30 @@ async function sendNotifications(data: NotificationData): Promise<void> {
 
   <hr style="border:none;border-top:1px solid #D2B48C;margin:28px 0 24px;">
 
-  <p style="color:#3D352F;font-size:14px;font-weight:bold;text-align:center;margin:0 0 20px;">
-    Wybierz akcję dla tej rezerwacji:
-  </p>
+  <p style="color:#3D352F;font-size:14px;font-weight:bold;text-align:center;margin:0 0 8px;">Zobacz zapytanie i podejmij decyzję</p>
+  <p style="color:#666;font-size:12px;text-align:center;line-height:1.5;margin:0 0 20px;">Na stronie apartamentu potwierdzisz lub odrzucisz rezerwację — obie opcje są widoczne po kliknięciu.</p>
 
-  <table style="width:100%;border-collapse:collapse;">
+  <table role="presentation" style="width:100%;border-collapse:collapse;">
     <tr>
-      <td style="padding:0 8px 0 0;">
-        <a href="${confirmUrl}"
-           style="display:block;background:#22C55E;color:#fff;text-align:center;padding:16px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;font-family:sans-serif;">
-          ✓ &nbsp;POTWIERDŹ REZERWACJĘ
-        </a>
-      </td>
-      <td style="padding:0 0 0 8px;">
-        <a href="${cancelUrl}"
-           style="display:block;background:#F5F0E8;color:#3D352F;text-align:center;padding:16px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;font-family:sans-serif;border:1px solid #D2B48C;">
-          ✕ &nbsp;ODRZUĆ
-        </a>
+      <td style="padding:0;text-align:center;">
+        <a href="${viewHref}" style="display:inline-block;background:#3D352F;color:#FDFBF7;text-align:center;padding:16px 32px;border-radius:50px;text-decoration:none;font-size:15px;font-weight:bold;font-family:Arial,sans-serif;line-height:1.3;">ZOBACZ REZERWACJĘ</a>
       </td>
     </tr>
   </table>
 
-  <p style="color:#999;font-size:11px;text-align:center;margin:16px 0 0;">
-    Kliknięcie przycisku otworzy stronę potwierdzenia — akcja wymaga dodatkowego kliknięcia.
-  </p>
+  <p style="color:#666;font-size:12px;line-height:1.5;margin:20px 0 8px;">Jeśli przycisk nie działa, skopiuj link do przeglądarki:</p>
+  <p style="color:#3D352F;font-size:11px;word-break:break-all;margin:0 0 20px;"><a href="${viewHref}" style="color:#A68A64;">${esc(viewUrlPlain)}</a></p>
 
-  <hr style="border:none;border-top:1px solid #D2B48C;margin:24px 0 16px;">
-  <p style="color:#888;font-size:11px;text-align:center;">ID: ${safeId}</p>
+  <hr style="border:none;border-top:1px solid #D2B48C;margin:0 0 16px;">
+  <p style="color:#888;font-size:11px;text-align:center;margin:0;">ID: ${safeId}</p>
 </div>`;
+
+    const ownerHtml = `<!DOCTYPE html>
+<html lang="pl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nowe zapytanie</title></head>
+<body style="margin:0;padding:24px 12px;background:#F5F0E8;">${ownerInner}
+</body>
+</html>`;
 
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -333,6 +347,7 @@ async function sendNotifications(data: NotificationData): Promise<void> {
         to: [ownerEmail],
         subject: `[Nowe zapytanie] ${data.guestName} | ${data.checkIn} → ${data.checkOut} | ${data.estimatedPrice} PLN`,
         html: ownerHtml,
+        text: ownerText,
       }),
     }).catch((e) => console.error("[email] owner notification failed:", e));
   }
