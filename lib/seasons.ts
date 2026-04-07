@@ -16,7 +16,7 @@ export const DEFAULT_SEASON_PRICING: SeasonPricing = {
   price_per_night_offseason: 350,
   price_per_night_peak: 490,
   price_per_night_holiday: 890,
-  min_nights_offseason: 2,
+  min_nights_offseason: 3,
   min_nights_peak: 4,
   min_nights_holiday: 5,
 };
@@ -46,7 +46,7 @@ export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
     season: 'offseason',
     label: 'Poza sezonem',
     pricePerNight: 350,
-    minNights: 2,
+    minNights: 3,
   },
 };
 
@@ -212,7 +212,7 @@ function dominantSeasonForBadge(breakdown: StayPriceBreakdown): Season {
   return 'offseason';
 }
 
-/** Peak inne niż majówka (Wielkanoc, BC, lato, ferie) → min. 4; sama majówka → min. 2. */
+/** Peak inne niż majówka (Wielkanoc, BC, lato, ferie) → min. 4; sama majówka → min. 3 (jak poza sezonem). */
 function isNonMajowkaPeakNight(date: string): boolean {
   return getPriceTierForNight(date) === 'peak' && !isMajowkaDate(date);
 }
@@ -258,7 +258,7 @@ export function getSeasonConfig(
   };
   const m = map[seasonFromStay];
 
-  /** BN/Sylwester → min 5; peak z Wielkanocy/BC/lata/ferii → min 4; sama majówka (30.04–04.05) lub poza sezonem → min 2. */
+  /** BN/Sylwester → min 5; peak z Wielkanocy/BC/lata/ferii → min 4; sama majówka (30.04–04.05) lub poza sezonem → min 3. */
   const minNights =
     seasonFromStay === 'holiday'
       ? p.min_nights_holiday

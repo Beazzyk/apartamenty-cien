@@ -56,8 +56,8 @@ Noce, które **nie** wpadają w pkt. 1 ani 2.
 
 - Pobyt obejmujący **choć jedną noc** z okresu **22.12–06.01** (stawka 890): minimum **5 nocy** (`min_nights_holiday`).
 - Pobyt z choć jedną nocą **sezonową inną niż majówka** (Wielkanoc, Boże Ciało, lato, ferie): minimum **4 noce** (`min_nights_peak`).
-- Pobyt **wyłącznie w majówce** (30.04–04.05) ewentualnie z dniami poza sezonem obok — minimum **2 noce** (jak `min_nights_offseason`).
-- Samo **poza sezonem** (bez peak): minimum **2 noce** (`min_nights_offseason`).
+- Pobyt **wyłącznie w majówce** (30.04–04.05) ewentualnie z dniami poza sezonem obok — minimum **3 noce** (jak `min_nights_offseason`).
+- Samo **poza sezonem** (bez peak): minimum **3 noce** (`min_nights_offseason`).
 
 ---
 

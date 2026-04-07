@@ -13,7 +13,7 @@ export interface SeasonConfig {
 export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
   holiday:  { season: "holiday",  pricePerNight: 890, minNights: 5, label: "Święta / sylwester" },
   peak:     { season: "peak",     pricePerNight: 490, minNights: 4, label: "Sezon" },
-  offseason:{ season: "offseason",pricePerNight: 350, minNights: 2, label: "Poza sezonem" },
+  offseason:{ season: "offseason",pricePerNight: 350, minNights: 3, label: "Poza sezonem" },
 };
 
 export interface StayPriceLine {

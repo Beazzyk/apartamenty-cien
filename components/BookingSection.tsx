@@ -49,7 +49,7 @@ const BookingSection: React.FC = () => {
   const effectivePrice = seasonConfig
     ? seasonConfig.pricePerNight
     : pricingForCalc.price_per_night_offseason;
-  const minNights = seasonConfig ? seasonConfig.minNights : 2;
+  const minNights = seasonConfig ? seasonConfig.minNights : 3;
   const meetsMinNights = nights === 0 || nights >= minNights;
 
   const canSubmit =
