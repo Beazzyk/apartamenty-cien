@@ -1,3 +1,9 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/calendar.ics",
+      "destination": "/api/calendar"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
