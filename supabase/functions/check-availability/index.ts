@@ -5,7 +5,8 @@ import {
   errorResponse,
 } from "../_shared/cors.ts";
 import { normalizeDateOnly } from "../_shared/date.ts";
-import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
+import { expandDateRange } from "../_shared/ical-parser.ts";
+import { fetchMergedExternalIcalDates } from "../_shared/external-ical.ts";
 import { fetchPricingFromDb } from "../_shared/pricing.ts";
 
 /** Normalize DB date (YYYY-MM-DD or ISO string) to YYYY-MM-DD for consistent API response. */
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
           .gte("date", fromN)
           .lte("date", toN),
 
-        fetchICalFromSettings(fromN, toN),
+        fetchMergedExternalIcalDates(supabaseAdmin, fromN, toN, 3000),
 
         fetchPricingFromDb(supabaseAdmin),
       ]);
@@ -110,20 +111,3 @@ Deno.serve(async (req) => {
   }
 });
 
-async function fetchICalFromSettings(
-  from: string,
-  to: string,
-): Promise<string[]> {
-  try {
-    const { data } = await supabaseAdmin
-      .from("settings")
-      .select("value")
-      .eq("key", "booking_ical_url")
-      .single();
-
-    if (!data?.value) return [];
-    return await fetchICalDates(data.value, from, to, 3000);
-  } catch {
-    return [];
-  }
-}

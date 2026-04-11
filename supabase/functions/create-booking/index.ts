@@ -2,7 +2,8 @@ import { supabaseAdmin } from "../_shared/supabase.ts";
 import { normalizeDateOnly } from "../_shared/date.ts";
 import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
-import { fetchICalDates, expandDateRange } from "../_shared/ical-parser.ts";
+import { expandDateRange } from "../_shared/ical-parser.ts";
+import { fetchMergedExternalIcalDates } from "../_shared/external-ical.ts";
 import { fetchPricingFromDb } from "../_shared/pricing.ts";
 import { computeStayPriceBreakdown, getSeasonConfig } from "../_shared/seasons.ts";
 
@@ -95,15 +96,14 @@ Deno.serve(async (req) => {
 
     const guestCount = Math.min(Math.max(parseInt(guests_count) || 2, 1), 6);
 
-    // --- Fresh iCal check (if Booking.com configured) ---
-    const { data: icalSetting } = await supabaseAdmin
-      .from("settings")
-      .select("value")
-      .eq("key", "booking_ical_url")
-      .single();
-
-    if (icalSetting?.value) {
-      const icalBlocked = await fetchICalDates(icalSetting.value, checkInNorm, checkOutNorm, 3000);
+    // --- Fresh iCal check (Booking.com + Airbnb when URLs configured) ---
+    const icalBlocked = await fetchMergedExternalIcalDates(
+      supabaseAdmin,
+      checkInNorm,
+      checkOutNorm,
+      3000,
+    );
+    if (icalBlocked.length > 0) {
       const requestedDates = new Set(expandDateRange(checkInNorm, checkOutNorm));
       const conflict = icalBlocked.find((d) => requestedDates.has(d));
       if (conflict) {

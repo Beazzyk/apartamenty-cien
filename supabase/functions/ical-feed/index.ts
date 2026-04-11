@@ -48,20 +48,22 @@ function icalEsc(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
-function generateICal(bookings: Booking[]): string {
-  const now = new Date()
-    .toISOString()
-    .replace(/[-:]/g, "")
-    .replace(/\.\d{3}/, "");
+/** RFC 5545 UTC date-time for DTSTAMP (must end with exactly one Z — double Z breaks Airbnb parsers). */
+function utcDtStamp(): string {
+  return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
 
+function generateICal(bookings: Booking[]): string {
+  const dtStamp = utcDtStamp();
+
+  // All-day events: DTSTART/DTEND use VALUE=DATE only (no TZID). CALSCALE early — some OTA importers expect it.
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//CienDuchaGor//Booking//PL",
-    "X-WR-CALNAME:Apartament Cień Ducha Gór",
-    "X-WR-TIMEZONE:Europe/Warsaw",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    "PRODID:-//CienDuchaGor//Booking//PL",
+    "X-WR-CALNAME:Apartament Cień Ducha Gór",
   ];
 
   for (const b of bookings) {
@@ -82,10 +84,10 @@ function generateICal(bookings: Booking[]): string {
 
     lines.push(
       "BEGIN:VEVENT",
+      `DTSTAMP:${dtStamp}`,
+      `UID:${b.id}@cienduchgor`,
       `DTSTART;VALUE=DATE:${dtstart}`,
       `DTEND;VALUE=DATE:${dtend}`,
-      `DTSTAMP:${now}Z`,
-      `UID:${b.id}@cienduchgor`,
       `SUMMARY:${icalEsc(summary)}`,
       `DESCRIPTION:${icalEsc(description)}`,
       `STATUS:${icalStatus}`,
