@@ -53,7 +53,12 @@ const BookingSection: React.FC = () => {
   const meetsMinNights = nights === 0 || nights >= minNights;
 
   const canSubmit =
-    checkIn && checkOut && nights >= minNights && guestName.trim() && guestEmail.trim() && status !== 'submitting';
+    checkIn &&
+    checkOut &&
+    nights >= 1 &&
+    guestName.trim() &&
+    guestEmail.trim() &&
+    status !== 'submitting';
 
   const guestLabel = (n: number) =>
     n === 1 ? `1 ${b.person1}` : n < 5 ? `${n} ${b.person234}` : `${n} ${b.person5}`;
@@ -256,7 +261,8 @@ const BookingSection: React.FC = () => {
                           {isMixedRates ? b.mixedStaysBadge : seasonConfig.label}
                         </span>
                         <span className="text-[11px] text-deep-brown/50">
-                          min. {seasonConfig.minNights} {nightsPL(seasonConfig.minNights)}
+                          {b.recommendedMinStay}{' '}
+                          {seasonConfig.minNights} {nightsPL(seasonConfig.minNights)}
                         </span>
                       </div>
                     )}
@@ -274,11 +280,15 @@ const BookingSection: React.FC = () => {
                     ) : null}
                     {/* Minimum nights warning */}
                     {!meetsMinNights && (
-                      <div className="mt-3 flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="mt-3 flex items-start gap-2 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                         </svg>
-                        Wybrany termin wymaga minimum {minNights} {nightsPL(minNights)}
+                        <span>
+                          {b.minNightsBelowNote
+                            .replace('{{MIN}}', String(minNights))
+                            .replace('{{NIGHTS}}', nightsPL(minNights))}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between items-end pt-3 mt-3 border-t border-cappuccino/20">

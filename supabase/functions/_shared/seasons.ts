@@ -11,9 +11,9 @@ export interface SeasonConfig {
 }
 
 export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
-  holiday:  { season: "holiday",  pricePerNight: 890, minNights: 5, label: "Święta / sylwester" },
-  peak:     { season: "peak",     pricePerNight: 490, minNights: 4, label: "Sezon" },
-  offseason:{ season: "offseason",pricePerNight: 350, minNights: 3, label: "Poza sezonem" },
+  holiday:  { season: "holiday",  pricePerNight: 850, minNights: 5, label: "Święta / sylwester" },
+  peak:     { season: "peak",     pricePerNight: 400, minNights: 4, label: "Sezon" },
+  offseason:{ season: "offseason",pricePerNight: 300, minNights: 3, label: "Poza sezonem" },
 };
 
 export interface StayPriceLine {
@@ -95,7 +95,7 @@ function isPeakDate(date: string): boolean {
   return false;
 }
 
-/** 890 tylko 22.12–06.01; Wielkanoc, majówka, Boże Ciało itd. jak sezon (490). */
+/** Okres 22.12–06.01 osobno; Wielkanoc, majówka, Boże Ciało itd. jak sezon. */
 export function getPriceTierForNight(date: string): Season {
   if (isChristmasNewYearHolidayDate(date)) return "holiday";
   if (isPeakDate(date)) return "peak";
@@ -166,18 +166,14 @@ function dominantSeasonForBadge(breakdown: StayPriceBreakdown): Season {
   return "offseason";
 }
 
-function isNonMajowkaPeakNight(date: string): boolean {
-  return getPriceTierForNight(date) === "peak" && !isMajowkaDate(date);
-}
-
-function stayIncludesNonMajowkaPeakNight(checkIn: string, checkOut: string): boolean {
+function stayIncludesPeakTierNight(checkIn: string, checkOut: string): boolean {
   const checkInN = normalizeDateOnly(checkIn);
   const checkOutN = normalizeDateOnly(checkOut);
   const cursor = new Date(checkInN + "T00:00:00Z");
   const end    = new Date(checkOutN + "T00:00:00Z");
   while (cursor < end) {
     const d = cursor.toISOString().slice(0, 10);
-    if (isNonMajowkaPeakNight(d)) return true;
+    if (getPriceTierForNight(d) === "peak") return true;
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return false;
@@ -213,7 +209,7 @@ export function getSeasonConfig(
   const minNights =
     seasonFromStay === "holiday"
       ? p.min_nights_holiday
-      : stayIncludesNonMajowkaPeakNight(checkIn, checkOut)
+      : stayIncludesPeakTierNight(checkIn, checkOut)
         ? p.min_nights_peak
         : p.min_nights_offseason;
 

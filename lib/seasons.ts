@@ -13,9 +13,9 @@ export interface SeasonPricing {
 }
 
 export const DEFAULT_SEASON_PRICING: SeasonPricing = {
-  price_per_night_offseason: 350,
-  price_per_night_peak: 490,
-  price_per_night_holiday: 890,
+  price_per_night_offseason: 300,
+  price_per_night_peak: 400,
+  price_per_night_holiday: 850,
   min_nights_offseason: 3,
   min_nights_peak: 4,
   min_nights_holiday: 5,
@@ -33,19 +33,19 @@ export const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
   holiday: {
     season: 'holiday',
     label: 'Święta / sylwester',
-    pricePerNight: 890,
+    pricePerNight: 850,
     minNights: 5,
   },
   peak: {
     season: 'peak',
     label: 'Sezon',
-    pricePerNight: 490,
+    pricePerNight: 400,
     minNights: 4,
   },
   offseason: {
     season: 'offseason',
     label: 'Poza sezonem',
-    pricePerNight: 350,
+    pricePerNight: 300,
     minNights: 3,
   },
 };
@@ -77,7 +77,7 @@ function addDaysUTC(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Jedyny okres po stawcie „świątecznej” (890): Boże Narodzenie / Sylwester. */
+/** Jedyny okres po stawcie „świątecznej” (wyższej): Boże Narodzenie / Sylwester. */
 function isChristmasNewYearHolidayDate(date: string): boolean {
   const [, m, d] = date.split('-').map(Number);
   if (m === 12 && d >= 22) return true;
@@ -113,8 +113,8 @@ function isCorpusChristiLongWeekend(date: string): boolean {
 }
 
 /**
- * Sezon (490): lato, ferie, Wielkanoc, majówka, Boże Ciało itd.
- * Stawka wyższa (890) tylko w `isChristmasNewYearHolidayDate`.
+ * Sezon (np. 400 zł): lato, ferie, Wielkanoc, majówka, Boże Ciało itd.
+ * Stawka wyższa (BN/Sylwester) tylko w `isChristmasNewYearHolidayDate`.
  */
 function isPeakDate(date: string): boolean {
   if (isEasterWeekDate(date)) return true;
@@ -133,7 +133,7 @@ function isPeakDate(date: string): boolean {
 }
 
 /**
- * Stawka za jedną noc: 890 tylko 22.12–06.01; pozostałe święta / długie weekendy jak sezon (490).
+ * Stawka za jedną noc: okres 22.12–06.01 osobno; pozostałe święta / długie weekendy jak sezon.
  */
 export function getPriceTierForNight(date: string): Season {
   if (isChristmasNewYearHolidayDate(date)) return 'holiday';
@@ -185,8 +185,8 @@ export function computeStayPriceBreakdown(
 }
 
 /**
- * Najsilniejszy sezon w pobycie — minimum nocy i etykieta.
- * Pierwsza noc w tierze „holiday” (tylko BN/Sylwester) → reguły min. świątecznych.
+ * Najsilniejszy sezon w pobycie — zalecane minimum nocy i etykieta.
+ * Pierwsza noc w tierze „holiday” (tylko BN/Sylwester) → zalecenie min. świątecznych.
  */
 export function getSeasonForStay(checkIn: string, checkOut: string): Season {
   const checkInN = normalizeDateOnly(checkIn);
@@ -212,19 +212,15 @@ function dominantSeasonForBadge(breakdown: StayPriceBreakdown): Season {
   return 'offseason';
 }
 
-/** Peak inne niż majówka (Wielkanoc, BC, lato, ferie) → min. 4; sama majówka → min. 3 (jak poza sezonem). */
-function isNonMajowkaPeakNight(date: string): boolean {
-  return getPriceTierForNight(date) === 'peak' && !isMajowkaDate(date);
-}
-
-function stayIncludesNonMajowkaPeakNight(checkIn: string, checkOut: string): boolean {
+/** Choć jedna noc po stawce sezonowej (peak) → zalecenie min. jak w sezonie (w tym majówka i Boże Ciało). */
+function stayIncludesPeakTierNight(checkIn: string, checkOut: string): boolean {
   const checkInN = normalizeDateOnly(checkIn);
   const checkOutN = normalizeDateOnly(checkOut);
   const cursor = new Date(checkInN + 'T00:00:00Z');
   const end = new Date(checkOutN + 'T00:00:00Z');
   while (cursor < end) {
     const d = cursor.toISOString().slice(0, 10);
-    if (isNonMajowkaPeakNight(d)) return true;
+    if (getPriceTierForNight(d) === 'peak') return true;
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return false;
@@ -258,11 +254,11 @@ export function getSeasonConfig(
   };
   const m = map[seasonFromStay];
 
-  /** BN/Sylwester → min 5; peak z Wielkanocy/BC/lata/ferii → min 4; sama majówka (30.04–04.05) lub poza sezonem → min 3. */
+  /** BN/Sylwester → zalecenie 5; jakakolwiek noc sezonowa (w tym majówka, BC) → zalecenie 4; samo poza sezonem → 3. */
   const minNights =
     seasonFromStay === 'holiday'
       ? p.min_nights_holiday
-      : stayIncludesNonMajowkaPeakNight(checkIn, checkOut)
+      : stayIncludesPeakTierNight(checkIn, checkOut)
         ? p.min_nights_peak
         : p.min_nights_offseason;
 

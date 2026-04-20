@@ -48,9 +48,13 @@ function icalEsc(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
-/** RFC 5545 UTC date-time for DTSTAMP (must end with exactly one Z — double Z breaks Airbnb parsers). */
+/** RFC 5545 UTC form `YYYYMMDDTHHMMSSZ` — always exactly one trailing Z (some stacks produced `ZZ`). */
 function utcDtStamp(): string {
-  return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const compact = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
+  return `${compact.replace(/Z+$/i, "")}Z`;
 }
 
 function generateICal(bookings: Booking[]): string {
@@ -75,17 +79,19 @@ function generateICal(bookings: Booking[]): string {
     // pending   → STATUS:TENTATIVE  (Google Calendar shows hatched/striped pattern)
     // confirmed → STATUS:CONFIRMED  (normal solid event)
     const icalStatus = isPending ? "TENTATIVE" : "CONFIRMED";
+    // Bez emoji i „długiego” myślnika — importery OTA bywają kapryśne; UTF-8 (ąęł…) jest OK.
     const summary = isPending
-      ? "⏳ Apartament · termin zajęty (oczekuje na potwierdzenie)"
-      : "✓ Apartament · rezerwacja potwierdzona";
+      ? "Apartament - termin zajęty (oczekuje na potwierdzenie)"
+      : "Apartament - rezerwacja potwierdzona";
     const description = isPending
-      ? "Zapytanie bezpośrednie – szczegóły tylko w panelu rezerwacji."
-      : "Rezerwacja potwierdzona – szczegóły tylko w panelu rezerwacji.";
+      ? "Zapytanie bezpośrednie - szczegóły tylko w panelu rezerwacji."
+      : "Rezerwacja potwierdzona - szczegóły tylko w panelu rezerwacji.";
 
     lines.push(
       "BEGIN:VEVENT",
       `DTSTAMP:${dtStamp}`,
       `UID:${b.id}@cienduchgor`,
+      `SEQUENCE:0`,
       `DTSTART;VALUE=DATE:${dtstart}`,
       `DTEND;VALUE=DATE:${dtend}`,
       `SUMMARY:${icalEsc(summary)}`,
@@ -97,5 +103,5 @@ function generateICal(bookings: Booking[]): string {
   }
 
   lines.push("END:VCALENDAR");
-  return lines.join("\r\n");
+  return `${lines.join("\r\n")}\r\n`;
 }

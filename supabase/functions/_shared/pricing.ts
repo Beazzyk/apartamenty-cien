@@ -11,9 +11,9 @@ export interface SeasonPricing {
 }
 
 export const DEFAULT_SEASON_PRICING: SeasonPricing = {
-  price_per_night_offseason: 350,
-  price_per_night_peak: 490,
-  price_per_night_holiday: 890,
+  price_per_night_offseason: 300,
+  price_per_night_peak: 400,
+  price_per_night_holiday: 850,
   min_nights_offseason: 3,
   min_nights_peak: 4,
   min_nights_holiday: 5,

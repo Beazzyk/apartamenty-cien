@@ -5,7 +5,7 @@ import { log } from "../_shared/logger.ts";
 import { expandDateRange } from "../_shared/ical-parser.ts";
 import { fetchMergedExternalIcalDates } from "../_shared/external-ical.ts";
 import { fetchPricingFromDb } from "../_shared/pricing.ts";
-import { computeStayPriceBreakdown, getSeasonConfig } from "../_shared/seasons.ts";
+import { computeStayPriceBreakdown } from "../_shared/seasons.ts";
 
 // ── Escape HTML — prevents XSS in email templates ────────────────────────────
 function esc(s: unknown): string {
@@ -111,23 +111,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- Season: validate minimum nights and calculate price (rates from settings) ---
-    const nights = Math.ceil(
-      (checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000,
-    );
-
+    // --- Season: price from settings (min. nights are advisory; host accepts short stays case-by-case) ---
     const pricing = await fetchPricingFromDb(supabaseAdmin);
-    const season = getSeasonConfig(checkInNorm, checkOutNorm, pricing);
     const priceBreakdown = computeStayPriceBreakdown(checkInNorm, checkOutNorm, pricing);
     const estimatedPrice = Math.round(priceBreakdown.total * 100) / 100;
-
-    if (nights < season.minNights) {
-      return errorResponse(
-        `Dla wybranego terminu (${season.label}) wymagane są minimum ${season.minNights} ${season.minNights < 5 ? "noce" : "nocy"}.`,
-        req,
-        400,
-      );
-    }
 
     // --- Insert booking — fetch management_token too ---
     const { data: booking, error: bookingError } = await supabaseAdmin
