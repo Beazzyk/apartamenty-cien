@@ -9,8 +9,8 @@ const pl = {
     rezerwuj: 'Rezerwuj',
   },
   hero: {
-    heading1: 'Apartament Cień Ducha Gór',
-    heading2: 'Szklarska Poręba',
+    heading1: 'Apartament w Szklarskiej Porębie',
+    heading2: '67 m² z Kominkiem dla 6 Osób',
     sub: 'Luksusowy apartament 67 m² z autorską duszą, białą biblioteką i ciepłem kominka w zabytkowej willi z XIX wieku.',
     cta1: 'Zarezerwuj swój pobyt',
     cta2: 'Odkryj wnętrza',
