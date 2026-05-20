@@ -16,9 +16,9 @@ const Amenities: React.FC = () => {
               <h3 className="font-serif text-2xl text-accent-gold mb-6 border-b border-cappuccino/30 pb-2">{cat.name}</h3>
               <ul className="space-y-3">
                 {cat.items.map((item, i) => (
-                  <li key={i} className="flex items-center text-deep-brown/80 font-light">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cappuccino mr-3"></span>
-                    {item}
+                  <li key={i} className="flex items-start gap-3 text-deep-brown/80 font-light">
+                    <span className="mt-2 w-1.5 h-1.5 shrink-0 rounded-full bg-cappuccino" aria-hidden />
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
