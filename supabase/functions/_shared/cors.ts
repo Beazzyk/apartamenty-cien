@@ -5,6 +5,8 @@ const isLocal = supabaseUrl.includes("127.0.0.1") || supabaseUrl.includes("local
 const SITE_ORIGINS = new Set([
   "https://cienduchagor.pl",
   "https://www.cienduchagor.pl",
+  "https://cienduchagor.com",
+  "https://www.cienduchagor.com",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ]);
