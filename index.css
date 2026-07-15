@@ -105,16 +105,18 @@
 /* Status days (pending/confirmed/blocked) carry real information, not just
    "unavailable" — react-day-picker's default --rdp-disabled-opacity dims
    *all* .rdp-disabled cells (including these), which washed the colors
-   below out to near-invisibility. Reset to full opacity so they read. */
-.calendar-wrapper .day-pending.rdp-disabled,
-.calendar-wrapper .day-confirmed.rdp-disabled,
-.calendar-wrapper .day-blocked.rdp-disabled {
+   below out to near-invisibility. Reset to full opacity so they read —
+   but only for today/future: past days get muted below regardless of
+   status, so it stays obvious which day is "today". */
+.calendar-wrapper .day-pending.rdp-disabled:not(.day-past),
+.calendar-wrapper .day-confirmed.rdp-disabled:not(.day-past),
+.calendar-wrapper .day-blocked.rdp-disabled:not(.day-past) {
   opacity: 1;
 }
 
 /* Pending days — yellow/orange (awaiting confirmation) */
 .calendar-wrapper .day-pending.rdp-disabled .rdp-day_button {
-  background-color: rgba(245, 158, 11, 0.8);
+  background-color: rgba(245, 158, 11, 0.7);
   color: #78350f;
   font-weight: 600;
   text-decoration: none;
@@ -122,18 +124,29 @@
 
 /* Confirmed days — red (booked) */
 .calendar-wrapper .day-confirmed.rdp-disabled .rdp-day_button {
-  background-color: rgba(239, 68, 68, 0.8);
-  color: #fff;
+  background-color: rgba(239, 68, 68, 0.65);
+  color: #7f1d1d;
   font-weight: 600;
   text-decoration: none;
 }
 
 /* Blocked days (Booking.com) — same as confirmed */
 .calendar-wrapper .day-blocked.rdp-disabled .rdp-day_button {
-  background-color: rgba(239, 68, 68, 0.75);
-  color: #fff;
+  background-color: rgba(239, 68, 68, 0.6);
+  color: #7f1d1d;
   font-weight: 600;
   text-decoration: none;
+}
+
+/* Past days (before today) are never actionable — mute them even if they
+   carry a status color, and always show the struck-through "past" look.
+   Without this, a past confirmed booking looked identical to an upcoming
+   one and it was impossible to tell where "today" was. */
+.calendar-wrapper .day-past.rdp-disabled {
+  opacity: 0.35;
+}
+.calendar-wrapper .day-past.rdp-disabled .rdp-day_button {
+  text-decoration: line-through !important;
 }
 
 .calendar-wrapper .rdp-button_previous,

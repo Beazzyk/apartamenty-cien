@@ -93,6 +93,8 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
     available: (day: Date) =>
       day >= today.current &&
       !allUnavailable.some(d => sameDay(d, day)),
+    /** Past days are never actionable — always show them muted, even if they carry a status color, so "today" stays visually obvious. */
+    past: (day: Date) => day < today.current,
   };
 
   const modifiersClassNames = {
@@ -100,6 +102,7 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
     confirmed: 'day-confirmed',
     blocked:   'day-blocked',
     available: 'day-available',
+    past:      'day-past',
   };
 
   return (
