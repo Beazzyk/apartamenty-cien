@@ -54,21 +54,11 @@ f) stron internetowych, z których system Użytkownika wchodzi na stronę intern
 g) stron internetowych, do których system Użytkownika uzyskuje dostęp za pośrednictwem strony internetowej: HTTPS://WWW.CIENDUCHAGOR.PL;
 h) plików dziennika, zawierających adresy IP lub inne dane, które umożliwiają przypisanie ich do Użytkownika (jeśli zostały podane na innej stronie internetowej, przez którą Użytkownik wszedł na stronę internetową: HTTPS://WWW.CIENDUCHAGOR.PL). Dane te są zapisywane w plikach logów systemu i nie są przechowywane razem z innymi danymi osobowymi Użytkownika.
 
-2. Administrator przetwarza następujące dane osobowe Użytkownika, których podanie jest niezbędne do:
-
-a) dokonywania zakupów za pomocą strony internetowej:
+2. Administrator przetwarza następujące dane osobowe Użytkownika, których podanie jest niezbędne do dokonania rezerwacji apartamentu za pomocą formularza rezerwacyjnego na stronie internetowej:
 - imię i nazwisko;
-- płeć;
-- adres dostawy;
+- adres e-mail;
 - numer telefonu;
-- adres e-mail.
-
-b) dokonywania zakupów przez konsumentów za pomocą strony internetowej:
-- imię i nazwisko;
-- płeć;
-- adres dostawy;
-- numer telefonu;
-- adres e-mail.
+- adres zamieszkania (ulica i numer, kod pocztowy, miejscowość) – niezbędny do rozliczenia pobytu.
 
 3. W przypadku odstąpienia od umowy bądź uznania reklamacji, gdy zwrot należności następuje bezpośrednio na rachunek bankowy Użytkownika, w celu dokonania zwrotu należności przetwarzamy również informacje, dotyczące numeru rachunku bankowego.
 

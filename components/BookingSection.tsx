@@ -13,17 +13,22 @@ import {
 } from '../lib/seasons';
 
 type BookingStatus = 'idle' | 'submitting' | 'success' | 'error';
+type BookingStep = 'dates' | 'details';
 
 const BookingSection: React.FC = () => {
   const { t } = useTranslation();
   const b = t.booking;
 
+  const [step, setStep] = useState<BookingStep>('dates');
   const [checkIn, setCheckIn] = useState<string | null>(null);
   const [checkOut, setCheckOut] = useState<string | null>(null);
   const [guests, setGuests] = useState(2);
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [guestAddress, setGuestAddress] = useState('');
+  const [guestPostalCode, setGuestPostalCode] = useState('');
+  const [guestCity, setGuestCity] = useState('');
   const [seasonPricing, setSeasonPricing] = useState<SeasonPricing | null>(null);
   const [status, setStatus] = useState<BookingStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -52,12 +57,15 @@ const BookingSection: React.FC = () => {
   const minNights = seasonConfig ? seasonConfig.minNights : 3;
   const meetsMinNights = nights === 0 || nights >= minNights;
 
+  const canProceed = Boolean(checkIn && checkOut && nights >= 1);
+
   const canSubmit =
-    checkIn &&
-    checkOut &&
-    nights >= 1 &&
+    canProceed &&
     guestName.trim() &&
     guestEmail.trim() &&
+    guestAddress.trim() &&
+    guestPostalCode.trim() &&
+    guestCity.trim() &&
     status !== 'submitting';
 
   const guestLabel = (n: number) =>
@@ -65,6 +73,16 @@ const BookingSection: React.FC = () => {
 
   const nightLabel = (n: number) =>
     n === 1 ? b.nightSingular : n < 5 ? b.nightFew : b.nightMany;
+
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canProceed) return;
+    setStep('details');
+  };
+
+  const handleBack = () => {
+    setStep('dates');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +96,9 @@ const BookingSection: React.FC = () => {
         guest_name: guestName,
         guest_email: guestEmail,
         guest_phone: guestPhone || undefined,
+        guest_address: guestAddress,
+        guest_postal_code: guestPostalCode,
+        guest_city: guestCity,
         check_in: checkIn,
         check_out: checkOut,
         guests_count: guests,
@@ -92,12 +113,16 @@ const BookingSection: React.FC = () => {
   };
 
   const resetForm = () => {
+    setStep('dates');
     setCheckIn(null);
     setCheckOut(null);
     setGuests(2);
     setGuestName('');
     setGuestEmail('');
     setGuestPhone('');
+    setGuestAddress('');
+    setGuestPostalCode('');
+    setGuestCity('');
     setSeasonPricing(null);
     setStatus('idle');
     setErrorMsg('');
@@ -148,6 +173,70 @@ const BookingSection: React.FC = () => {
     );
   }
 
+  const dateChips = checkIn && (
+    <div className="mt-6 flex items-center gap-3">
+      <div className="flex-1 bg-warm-beige rounded-lg py-3 px-4 text-center">
+        <div className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold">{b.arrival}</div>
+        <div className="font-serif text-deep-brown text-lg mt-1">{formatDatePL(checkIn)}</div>
+      </div>
+      <svg className="w-5 h-5 text-cappuccino flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+      <div className="flex-1 bg-warm-beige rounded-lg py-3 px-4 text-center">
+        <div className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold">{b.departure}</div>
+        <div className="font-serif text-deep-brown text-lg mt-1">{checkOut ? formatDatePL(checkOut) : '—'}</div>
+      </div>
+    </div>
+  );
+
+  const priceBreakdownBlock = nights > 0 && (
+    <div className="bg-white rounded-xl p-5 border border-cappuccino/10">
+      {seasonConfig && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+            seasonConfig.season === 'holiday' ? 'bg-red-100 text-red-700' :
+            seasonConfig.season === 'peak'    ? 'bg-amber-100 text-amber-700' :
+            'bg-emerald-100 text-emerald-700'
+          }`}>
+            {isMixedRates ? b.mixedStaysBadge : seasonConfig.label}
+          </span>
+          <span className="text-[11px] text-deep-brown/50">
+            {b.recommendedMinStay}{' '}
+            {seasonConfig.minNights} {nightsPL(seasonConfig.minNights)}
+          </span>
+        </div>
+      )}
+      {breakdown && breakdown.lines.length > 0 ? (
+        <div className="space-y-2">
+          {breakdown.lines.map((line, i) => (
+            <div key={i} className="flex justify-between text-sm text-deep-brown/60">
+              <span>
+                {line.unitPrice} PLN × {line.nights} {nightLabel(line.nights)}
+              </span>
+              <span>{line.subtotal} PLN</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {!meetsMinNights && (
+        <div className="mt-3 flex items-start gap-2 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <span>
+            {b.minNightsBelowNote
+              .replace('{{MIN}}', String(minNights))
+              .replace('{{NIGHTS}}', nightsPL(minNights))}
+          </span>
+        </div>
+      )}
+      <div className="flex justify-between items-end pt-3 mt-3 border-t border-cappuccino/20">
+        <span className="text-xs uppercase tracking-wide text-deep-brown/50">{b.estimate}</span>
+        <span className="text-3xl font-serif text-deep-brown">{totalPrice} PLN</span>
+      </div>
+    </div>
+  );
+
   // --- Main booking form ---
   return (
     <section id="rezerwacja" className="py-16 sm:py-20 md:py-24 bg-paper-white relative">
@@ -157,190 +246,134 @@ const BookingSection: React.FC = () => {
           {/* Row 1: Calendar + Form */}
           <div className="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] rounded-2xl overflow-hidden border border-cappuccino/20 flex flex-col lg:flex-row">
 
-            {/* Left: Calendar + dates */}
-            <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 scroll-reveal active">
-              <h2 className="font-serif text-3xl sm:text-4xl text-deep-brown mb-4">{b.heading}</h2>
-              <p className="text-deep-brown/60 mb-8 sm:mb-10 uppercase tracking-widest text-xs">{b.directLabel}</p>
+            {step === 'dates' ? (
+              <>
+                {/* Left: Calendar + dates */}
+                <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 scroll-reveal active">
+                  <p className="text-[11px] uppercase tracking-widest text-accent-gold font-bold mb-3">{b.step1Label}</p>
+                  <h2 className="font-serif text-3xl sm:text-4xl text-deep-brown mb-4">{b.heading}</h2>
+                  <p className="text-deep-brown/60 mb-8 sm:mb-10 uppercase tracking-widest text-xs">{b.directLabel}</p>
 
-              <AvailabilityCalendar
-                checkIn={checkIn}
-                checkOut={checkOut}
-                onRangeChange={handleRangeChange}
-                onPricingUpdate={setSeasonPricing}
-              />
+                  <AvailabilityCalendar
+                    checkIn={checkIn}
+                    checkOut={checkOut}
+                    onRangeChange={handleRangeChange}
+                    onPricingUpdate={setSeasonPricing}
+                  />
 
-              {checkIn && (
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="flex-1 bg-warm-beige rounded-lg py-3 px-4 text-center">
-                    <div className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold">{b.arrival}</div>
-                    <div className="font-serif text-deep-brown text-lg mt-1">{formatDatePL(checkIn)}</div>
+                  {dateChips}
+
+                  <div className="mt-8 flex items-center justify-center space-x-4">
+                    <span className="h-px w-12 bg-cappuccino/30"></span>
+                    <span className="text-xs uppercase text-deep-brown/40">{b.orThrough}</span>
+                    <span className="h-px w-12 bg-cappuccino/30"></span>
                   </div>
-                  <svg className="w-5 h-5 text-cappuccino flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                  <div className="flex-1 bg-warm-beige rounded-lg py-3 px-4 text-center">
-                    <div className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold">{b.departure}</div>
-                    <div className="font-serif text-deep-brown text-lg mt-1">{checkOut ? formatDatePL(checkOut) : '—'}</div>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-8 flex items-center justify-center space-x-4">
-                <span className="h-px w-12 bg-cappuccino/30"></span>
-                <span className="text-xs uppercase text-deep-brown/40">{b.orThrough}</span>
-                <span className="h-px w-12 bg-cappuccino/30"></span>
-              </div>
-              <div className="mt-6">
-                <a
-                  href={BOOKING_COM_LISTING_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center space-x-2 w-full py-3 border border-blue-800 text-blue-800 rounded-full hover:bg-blue-50 transition-all font-semibold"
-                >
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Booking.com_logo.svg" alt="Booking.com" className="h-4" />
-                  <span>{b.bookViaBooking}</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Right: Form */}
-            <div className="w-full lg:w-1/2 bg-warm-beige/50 p-6 sm:p-10 lg:p-16 border-t lg:border-t-0 lg:border-l border-cappuccino/10 scroll-reveal active">
-              <form className="space-y-8" onSubmit={handleSubmit}>
-                <div className="flex flex-col space-y-2">
-                  <label className="text-xs uppercase font-semibold text-accent-gold">{b.guestsLabel}</label>
-                  <select
-                    className="p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
-                    value={guests}
-                    onChange={(e) => setGuests(Number(e.target.value))}
-                  >
-                    {[1,2,3,4,5,6].map(n => (
-                      <option key={n} value={n}>{guestLabel(n)}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <p className="text-xs uppercase font-semibold text-accent-gold mb-3">{b.contactLabel}</p>
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      placeholder={b.namePlaceholder}
-                      className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="email"
-                      placeholder={b.emailPlaceholder}
-                      className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
-                      value={guestEmail}
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="tel"
-                      placeholder={b.phonePlaceholder}
-                      className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
-                      value={guestPhone}
-                      onChange={(e) => setGuestPhone(e.target.value)}
-                    />
+                  <div className="mt-6">
+                    <a
+                      href={BOOKING_COM_LISTING_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center space-x-2 w-full py-3 border border-blue-800 text-blue-800 rounded-full hover:bg-blue-50 transition-all font-semibold"
+                    >
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Booking.com_logo.svg" alt="Booking.com" className="h-4" />
+                      <span>{b.bookViaBooking}</span>
+                    </a>
                   </div>
                 </div>
 
-                {nights > 0 && (
-                  <div className="bg-white rounded-xl p-5 border border-cappuccino/10">
-                    {/* Season badge */}
-                    {seasonConfig && (
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-                          seasonConfig.season === 'holiday' ? 'bg-red-100 text-red-700' :
-                          seasonConfig.season === 'peak'    ? 'bg-amber-100 text-amber-700' :
-                          'bg-emerald-100 text-emerald-700'
-                        }`}>
-                          {isMixedRates ? b.mixedStaysBadge : seasonConfig.label}
-                        </span>
-                        <span className="text-[11px] text-deep-brown/50">
-                          {b.recommendedMinStay}{' '}
-                          {seasonConfig.minNights} {nightsPL(seasonConfig.minNights)}
+                {/* Right: price summary + next step */}
+                <div className="w-full lg:w-1/2 bg-warm-beige/50 p-6 sm:p-10 lg:p-16 border-t lg:border-t-0 lg:border-l border-cappuccino/10 scroll-reveal active">
+                  <form className="space-y-8" onSubmit={handleNext}>
+                    {priceBreakdownBlock}
+
+                    <div className="pt-6">
+                      <div className="flex justify-between items-end mb-6">
+                        <span className="text-sm text-deep-brown/60 uppercase tracking-wide">{b.priceFrom}</span>
+                        <span className="text-3xl font-serif text-deep-brown">
+                          {effectivePrice} PLN{' '}
+                          <span className="text-sm font-sans font-light">{b.perNight}</span>
                         </span>
                       </div>
-                    )}
-                    {breakdown && breakdown.lines.length > 0 ? (
-                      <div className="space-y-2">
-                        {breakdown.lines.map((line, i) => (
-                          <div key={i} className="flex justify-between text-sm text-deep-brown/60">
-                            <span>
-                              {line.unitPrice} PLN × {line.nights} {nightLabel(line.nights)}
-                            </span>
-                            <span>{line.subtotal} PLN</span>
-                          </div>
-                        ))}
+
+                      <button
+                        type="submit"
+                        disabled={!canProceed}
+                        className={`w-full py-5 rounded-full text-lg font-medium transition-all duration-300 shadow-lg active:scale-95 ${
+                          canProceed
+                            ? 'bg-deep-brown text-white hover:bg-accent-gold cursor-pointer'
+                            : 'bg-cappuccino/30 text-deep-brown/30 cursor-not-allowed'
+                        }`}
+                      >
+                        {b.nextBtn}
+                      </button>
+
+                      {!canProceed && (
+                        <p className="text-center text-xs text-deep-brown/40 mt-3">{b.pickDatesFirst}</p>
+                      )}
+
+                      <div className="mt-6 pt-5 border-t border-cappuccino/20">
+                        <p className="text-xs uppercase tracking-widest text-accent-gold font-bold mb-3">{b.pricingLabel}</p>
+                        <ul className="text-sm text-deep-brown/70 space-y-1.5 mb-4">
+                          <li>{b.pricingOff}</li>
+                          <li>{b.pricingOn}</li>
+                          <li>{b.pricingHoliday}</li>
+                        </ul>
+                        <p className="text-xs uppercase tracking-widest text-accent-gold font-bold mb-3">{b.rulesLabel}</p>
+                        <ul className="text-sm text-deep-brown/60 space-y-1.5">
+                          <li>{b.ruleHours}</li>
+                          <li><strong>{b.ruleNoSmoking}</strong></li>
+                          <li><strong>{b.ruleNoPets}</strong></li>
+                          <li><strong>{b.ruleNoParties}</strong></li>
+                          <li>{b.ruleDeposit}</li>
+                        </ul>
+                        <p className="text-sm text-deep-brown/70 mt-4 pt-4 border-t border-cappuccino/15 italic">
+                          {b.peaceNote}
+                        </p>
                       </div>
-                    ) : null}
-                    {/* Minimum nights warning */}
-                    {!meetsMinNights && (
-                      <div className="mt-3 flex items-start gap-2 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                        <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                        </svg>
-                        <span>
-                          {b.minNightsBelowNote
-                            .replace('{{MIN}}', String(minNights))
-                            .replace('{{NIGHTS}}', nightsPL(minNights))}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-end pt-3 mt-3 border-t border-cappuccino/20">
-                      <span className="text-xs uppercase tracking-wide text-deep-brown/50">{b.estimate}</span>
-                      <span className="text-3xl font-serif text-deep-brown">{totalPrice} PLN</span>
                     </div>
-                  </div>
-                )}
+                  </form>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Left: selected dates summary */}
+                <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 scroll-reveal active">
+                  <p className="text-[11px] uppercase tracking-widest text-accent-gold font-bold mb-3">{b.step2Label}</p>
+                  <h2 className="font-serif text-3xl sm:text-4xl text-deep-brown mb-8">{b.heading}</h2>
 
-                <div className="pt-6">
-                  <div className="flex justify-between items-end mb-6">
-                    <span className="text-sm text-deep-brown/60 uppercase tracking-wide">{b.priceFrom}</span>
-                    <span className="text-3xl font-serif text-deep-brown">
-                      {effectivePrice} PLN{' '}
-                      <span className="text-sm font-sans font-light">{b.perNight}</span>
-                    </span>
-                  </div>
-
-                  {status === 'error' && errorMsg && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm mb-4">
-                      {errorMsg}
+                  <div className="bg-warm-beige rounded-xl p-6">
+                    <p className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold mb-3">{b.selectedDatesLabel}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-white rounded-lg py-3 px-4 text-center">
+                        <div className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold">{b.arrival}</div>
+                        <div className="font-serif text-deep-brown text-lg mt-1">{checkIn ? formatDatePL(checkIn) : '—'}</div>
+                      </div>
+                      <svg className="w-5 h-5 text-cappuccino flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                      <div className="flex-1 bg-white rounded-lg py-3 px-4 text-center">
+                        <div className="text-[10px] uppercase tracking-wider text-accent-gold font-semibold">{b.departure}</div>
+                        <div className="font-serif text-deep-brown text-lg mt-1">{checkOut ? formatDatePL(checkOut) : '—'}</div>
+                      </div>
                     </div>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={!canSubmit}
-                    className={`w-full py-5 rounded-full text-lg font-medium transition-all duration-300 shadow-lg active:scale-95 ${
-                      canSubmit
-                        ? 'bg-deep-brown text-white hover:bg-accent-gold cursor-pointer'
-                        : 'bg-cappuccino/30 text-deep-brown/30 cursor-not-allowed'
-                    }`}
-                  >
-                    {status === 'submitting' ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        {b.submittingBtn}
-                      </span>
-                    ) : (
-                      b.submitBtn
+                    {nights > 0 && (
+                      <div className="flex justify-between items-end pt-4 mt-4 border-t border-cappuccino/20">
+                        <span className="text-xs uppercase tracking-wide text-deep-brown/50">{b.estimate}</span>
+                        <span className="text-2xl font-serif text-deep-brown">{totalPrice} PLN</span>
+                      </div>
                     )}
-                  </button>
 
-                  <p className="text-center text-xs text-deep-brown/40 mt-3">{b.afterSend}</p>
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="mt-4 text-accent-gold hover:text-deep-brown transition-colors underline underline-offset-4 text-sm"
+                    >
+                      {b.changeDatesBtn}
+                    </button>
+                  </div>
 
-                  <div className="mt-6 pt-5 border-t border-cappuccino/20">
-                    <p className="text-xs uppercase tracking-widest text-accent-gold font-bold mb-3">{b.pricingLabel}</p>
-                    <ul className="text-sm text-deep-brown/70 space-y-1.5 mb-4">
-                      <li>{b.pricingOff}</li>
-                      <li>{b.pricingOn}</li>
-                      <li>{b.pricingHoliday}</li>
-                    </ul>
+                  <div className="mt-8 pt-6 border-t border-cappuccino/20">
                     <p className="text-xs uppercase tracking-widest text-accent-gold font-bold mb-3">{b.rulesLabel}</p>
                     <ul className="text-sm text-deep-brown/60 space-y-1.5">
                       <li>{b.ruleHours}</li>
@@ -349,13 +382,127 @@ const BookingSection: React.FC = () => {
                       <li><strong>{b.ruleNoParties}</strong></li>
                       <li>{b.ruleDeposit}</li>
                     </ul>
-                    <p className="text-sm text-deep-brown/70 mt-4 pt-4 border-t border-cappuccino/15 italic">
-                      {b.peaceNote}
-                    </p>
                   </div>
                 </div>
-              </form>
-            </div>
+
+                {/* Right: contact + address form */}
+                <div className="w-full lg:w-1/2 bg-warm-beige/50 p-6 sm:p-10 lg:p-16 border-t lg:border-t-0 lg:border-l border-cappuccino/10 scroll-reveal active">
+                  <form className="space-y-8" onSubmit={handleSubmit}>
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-xs uppercase font-semibold text-accent-gold">{b.guestsLabel}</label>
+                      <select
+                        className="p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                        value={guests}
+                        onChange={(e) => setGuests(Number(e.target.value))}
+                      >
+                        {[1,2,3,4,5,6].map(n => (
+                          <option key={n} value={n}>{guestLabel(n)}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase font-semibold text-accent-gold mb-3">{b.contactLabel}</p>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder={b.namePlaceholder}
+                          className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          required
+                        />
+                        <input
+                          type="email"
+                          placeholder={b.emailPlaceholder}
+                          className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
+                          required
+                        />
+                        <input
+                          type="tel"
+                          placeholder={b.phonePlaceholder}
+                          className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                          value={guestPhone}
+                          onChange={(e) => setGuestPhone(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase font-semibold text-accent-gold mb-1">{b.addressLabel}</p>
+                      <p className="text-xs text-deep-brown/50 mb-3">{b.addressHint}</p>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder={b.addressPlaceholder}
+                          className="w-full p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                          value={guestAddress}
+                          onChange={(e) => setGuestAddress(e.target.value)}
+                          required
+                        />
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            placeholder={b.postalCodePlaceholder}
+                            className="w-2/5 p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                            value={guestPostalCode}
+                            onChange={(e) => setGuestPostalCode(e.target.value)}
+                            required
+                          />
+                          <input
+                            type="text"
+                            placeholder={b.cityPlaceholder}
+                            className="flex-1 p-4 border border-cappuccino/30 rounded-lg focus:ring-2 focus:ring-cappuccino focus:outline-none bg-white"
+                            value={guestCity}
+                            onChange={(e) => setGuestCity(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {status === 'error' && errorMsg && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">
+                        {errorMsg}
+                      </div>
+                    )}
+
+                    <div>
+                      <button
+                        type="submit"
+                        disabled={!canSubmit}
+                        className={`w-full py-5 rounded-full text-lg font-medium transition-all duration-300 shadow-lg active:scale-95 ${
+                          canSubmit
+                            ? 'bg-deep-brown text-white hover:bg-accent-gold cursor-pointer'
+                            : 'bg-cappuccino/30 text-deep-brown/30 cursor-not-allowed'
+                        }`}
+                      >
+                        {status === 'submitting' ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            {b.submittingBtn}
+                          </span>
+                        ) : (
+                          b.submitBtn
+                        )}
+                      </button>
+
+                      <p className="text-center text-xs text-deep-brown/40 mt-3">{b.afterSend}</p>
+
+                      <button
+                        type="button"
+                        onClick={handleBack}
+                        className="w-full text-center text-sm text-deep-brown/50 hover:text-deep-brown transition-colors mt-4"
+                      >
+                        ← {b.backBtn}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Row 2: Info cards */}

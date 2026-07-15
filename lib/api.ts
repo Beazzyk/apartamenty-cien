@@ -26,6 +26,9 @@ export interface CreateBookingRequest {
   guest_name: string;
   guest_email: string;
   guest_phone?: string;
+  guest_address: string;
+  guest_postal_code: string;
+  guest_city: string;
   check_in: string;
   check_out: string;
   guests_count: number;

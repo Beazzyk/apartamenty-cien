@@ -29,11 +29,33 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { guest_name, guest_email, guest_phone, check_in, check_out, guests_count } = body;
+    const {
+      guest_name,
+      guest_email,
+      guest_phone,
+      guest_address,
+      guest_postal_code,
+      guest_city,
+      check_in,
+      check_out,
+      guests_count,
+    } = body;
 
     // --- Validation ---
-    if (!guest_name?.trim() || !guest_email?.trim() || !check_in || !check_out) {
-      return errorResponse("Wymagane pola: imię, e-mail, data przyjazdu, data wyjazdu", req, 400);
+    if (
+      !guest_name?.trim() ||
+      !guest_email?.trim() ||
+      !guest_address?.trim() ||
+      !guest_postal_code?.trim() ||
+      !guest_city?.trim() ||
+      !check_in ||
+      !check_out
+    ) {
+      return errorResponse(
+        "Wymagane pola: imię, e-mail, adres, kod pocztowy, miasto, data przyjazdu, data wyjazdu",
+        req,
+        400,
+      );
     }
 
     // Length limits (M-1)
@@ -45,6 +67,15 @@ Deno.serve(async (req) => {
     }
     if (guest_phone && guest_phone.length > 30) {
       return errorResponse("Numer telefonu jest zbyt długi.", req, 400);
+    }
+    if (guest_address.trim().length > 200) {
+      return errorResponse("Adres jest zbyt długi.", req, 400);
+    }
+    if (guest_postal_code.trim().length > 20) {
+      return errorResponse("Kod pocztowy jest zbyt długi.", req, 400);
+    }
+    if (guest_city.trim().length > 120) {
+      return errorResponse("Nazwa miejscowości jest zbyt długa.", req, 400);
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,6 +105,8 @@ Deno.serve(async (req) => {
     if (checkInDate < today) {
       return errorResponse("Nie można rezerwować dat z przeszłości", req, 400);
     }
+
+    const nights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000);
 
     // Max 2 years in future (M-1)
     const maxFuture = new Date();
@@ -123,6 +156,9 @@ Deno.serve(async (req) => {
         guest_name: guest_name.trim(),
         guest_email: guest_email.trim().toLowerCase(),
         guest_phone: guest_phone?.trim() || null,
+        guest_address: guest_address.trim(),
+        guest_postal_code: guest_postal_code.trim(),
+        guest_city: guest_city.trim(),
         check_in: checkInNorm,
         check_out: checkOutNorm,
         guests_count: guestCount,
@@ -147,6 +183,9 @@ Deno.serve(async (req) => {
       guestName: guest_name.trim(),
       guestEmail: guest_email.trim().toLowerCase(),
       guestPhone: guest_phone?.trim() || null,
+      guestAddress: guest_address.trim(),
+      guestPostalCode: guest_postal_code.trim(),
+      guestCity: guest_city.trim(),
       checkIn: checkInNorm,
       checkOut: checkOutNorm,
       guestsCount: guestCount,
@@ -201,6 +240,9 @@ interface NotificationData {
   guestName: string;
   guestEmail: string;
   guestPhone: string | null;
+  guestAddress: string;
+  guestPostalCode: string;
+  guestCity: string;
   checkIn: string;
   checkOut: string;
   guestsCount: number;
@@ -225,6 +267,9 @@ async function sendNotifications(data: NotificationData): Promise<void> {
   const safeName   = esc(data.guestName);
   const safeEmail  = esc(data.guestEmail);
   const safePhone  = esc(phoneText);
+  const safeAddress    = esc(data.guestAddress);
+  const safePostalCode = esc(data.guestPostalCode);
+  const safeCity       = esc(data.guestCity);
   const safeIn     = esc(data.checkIn);
   const safeOut    = esc(data.checkOut);
   const safeNights = esc(data.nights);
@@ -247,7 +292,8 @@ async function sendNotifications(data: NotificationData): Promise<void> {
       `Szac. cena: ${data.estimatedPrice} PLN\n\n` +
       `Gość: ${data.guestName}\n` +
       `E-mail: ${data.guestEmail}\n` +
-      `Telefon: ${phoneText}\n\n` +
+      `Telefon: ${phoneText}\n` +
+      `Adres: ${data.guestAddress}, ${data.guestPostalCode} ${data.guestCity}\n\n` +
       `Otwórz stronę z rezerwacją (skopiuj do przeglądarki):\n${viewUrlPlain}\n\n` +
       `Na stronie możesz potwierdzić lub odrzucić zapytanie.\n\n` +
       `ID: ${data.bookingId}`;
@@ -296,6 +342,10 @@ async function sendNotifications(data: NotificationData): Promise<void> {
     <tr style="background:#FDFBF7;">
       <td style="padding:8px 12px;color:#666;">Telefon</td>
       <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safePhone}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 12px;color:#666;">Adres</td>
+      <td style="padding:8px 12px;font-weight:bold;color:#3D352F;">${safeAddress}, ${safePostalCode} ${safeCity}</td>
     </tr>
   </table>
 
