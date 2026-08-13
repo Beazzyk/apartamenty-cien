@@ -120,6 +120,33 @@ function icalEsc(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
+/**
+ * RFC 5545 §3.1 content-line folding: no physical line may exceed 75 octets,
+ * continuations start with a single space. Counted in octets, not characters —
+ * `ó` and `ł` take two bytes each, which is exactly how the DESCRIPTION lines
+ * used to spill over to 76. Never splits a multi-byte UTF-8 sequence.
+ */
+export function foldICalLine(line: string): string {
+  const bytes = new TextEncoder().encode(line);
+  if (bytes.length <= 75) return line;
+
+  const decoder = new TextDecoder();
+  const parts: string[] = [];
+  let start = 0;
+  let limit = 75; // continuations lose one octet to the leading space
+
+  while (start < bytes.length) {
+    let end = Math.min(start + limit, bytes.length);
+    // 0b10xxxxxx marks a UTF-8 continuation byte — back off so we never cut one.
+    while (end > start && end < bytes.length && (bytes[end] & 0xc0) === 0x80) end--;
+    parts.push(decoder.decode(bytes.slice(start, end)));
+    start = end;
+    limit = 74;
+  }
+
+  return parts.join("\r\n ");
+}
+
 /** RFC 5545 UTC form `YYYYMMDDTHHMMSSZ` — always exactly one trailing Z (some stacks produced `ZZ`). */
 function utcDtStamp(): string {
   const compact = new Date()
@@ -178,5 +205,5 @@ export function generateICal(bookings: FeedBooking[]): string {
   }
 
   lines.push("END:VCALENDAR");
-  return `${lines.join("\r\n")}\r\n`;
+  return `${lines.map(foldICalLine).join("\r\n")}\r\n`;
 }

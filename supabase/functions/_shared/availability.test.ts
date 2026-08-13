@@ -157,6 +157,32 @@ test("outgoing feed extends DTEND so partners hold the cleaning day", () => {
   );
 });
 
+test("no feed line exceeds 75 octets", () => {
+  const ical = generateICal([
+    { id: "abc", check_in: "2026-09-01", check_out: "2026-09-08", status: "confirmed" },
+    { id: "def", check_in: "2026-10-01", check_out: "2026-10-04", status: "pending" },
+  ]);
+
+  const tooLong = ical
+    .split("\r\n")
+    .filter((l) => Buffer.byteLength(l, "utf8") > 75);
+
+  assert.deepEqual(tooLong, [], "RFC 5545 §3.1 caps a content line at 75 octets");
+});
+
+test("folding is reversible and keeps Polish characters intact", () => {
+  const ical = generateICal([
+    { id: "abc", check_in: "2026-09-01", check_out: "2026-09-08", status: "confirmed" },
+  ]);
+
+  // Unfolding per RFC 5545: drop CRLF followed by a single space.
+  const unfolded = ical.replace(/\r\n /g, "");
+  assert.match(
+    unfolded,
+    /DESCRIPTION:Rezerwacja potwierdzona - szczegóły tylko w panelu rezerwacji\./,
+  );
+});
+
 test("feed keeps pending bookings tentative", () => {
   const ical = generateICal([
     { id: "abc", check_in: "2026-09-01", check_out: "2026-09-04", status: "pending" },
