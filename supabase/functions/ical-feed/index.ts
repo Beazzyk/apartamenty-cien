@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { log } from "../_shared/logger.ts";
+import { generateICal } from "../_shared/ical-parser.ts";
 
 Deno.serve(async () => {
   try {
@@ -31,77 +32,3 @@ Deno.serve(async () => {
     return new Response("Internal Server Error", { status: 500 });
   }
 });
-
-interface Booking {
-  id: string;
-  check_in: string;
-  check_out: string;
-  status: "pending" | "confirmed";
-}
-
-/** RFC 5545 TEXT escaping for SUMMARY / DESCRIPTION. */
-function icalEsc(text: string): string {
-  return text
-    .replace(/\\/g, "\\\\")
-    .replace(/;/g, "\\;")
-    .replace(/,/g, "\\,")
-    .replace(/\n/g, "\\n");
-}
-
-/** RFC 5545 UTC form `YYYYMMDDTHHMMSSZ` — always exactly one trailing Z (some stacks produced `ZZ`). */
-function utcDtStamp(): string {
-  const compact = new Date()
-    .toISOString()
-    .replace(/[-:]/g, "")
-    .replace(/\.\d{3}/, "");
-  return `${compact.replace(/Z+$/i, "")}Z`;
-}
-
-function generateICal(bookings: Booking[]): string {
-  const dtStamp = utcDtStamp();
-
-  // All-day events: DTSTART/DTEND use VALUE=DATE only (no TZID). CALSCALE early — some OTA importers expect it.
-  const lines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    "PRODID:-//CienDuchaGor//Booking//PL",
-    "X-WR-CALNAME:Apartament Cień Ducha Gór",
-  ];
-
-  for (const b of bookings) {
-    const dtstart = b.check_in.replace(/-/g, "");
-    const dtend = b.check_out.replace(/-/g, "");
-
-    const isPending = b.status === "pending";
-
-    // pending   → STATUS:TENTATIVE  (Google Calendar shows hatched/striped pattern)
-    // confirmed → STATUS:CONFIRMED  (normal solid event)
-    const icalStatus = isPending ? "TENTATIVE" : "CONFIRMED";
-    // Bez emoji i „długiego” myślnika — importery OTA bywają kapryśne; UTF-8 (ąęł…) jest OK.
-    const summary = isPending
-      ? "Apartament - termin zajęty (oczekuje na potwierdzenie)"
-      : "Apartament - rezerwacja potwierdzona";
-    const description = isPending
-      ? "Zapytanie bezpośrednie - szczegóły tylko w panelu rezerwacji."
-      : "Rezerwacja potwierdzona - szczegóły tylko w panelu rezerwacji.";
-
-    lines.push(
-      "BEGIN:VEVENT",
-      `DTSTAMP:${dtStamp}`,
-      `UID:${b.id}@cienduchgor`,
-      `SEQUENCE:0`,
-      `DTSTART;VALUE=DATE:${dtstart}`,
-      `DTEND;VALUE=DATE:${dtend}`,
-      `SUMMARY:${icalEsc(summary)}`,
-      `DESCRIPTION:${icalEsc(description)}`,
-      `STATUS:${icalStatus}`,
-      `TRANSP:OPAQUE`,
-      "END:VEVENT",
-    );
-  }
-
-  lines.push("END:VCALENDAR");
-  return `${lines.join("\r\n")}\r\n`;
-}

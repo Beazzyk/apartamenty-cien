@@ -17,3 +17,23 @@ port = 54323
 # Linki z poczty muszą działać bez JWT (anon nie jest w mailu); autoryzacja = management_token.
 [functions.manage-booking]
 verify_jwt = false
+
+# UWAGA: brak wpisu = verify_jwt domyślnie true, a `supabase functions deploy`
+# nadpisuje tym ustawienie z dashboardu. Publiczne endpointy muszą być tu
+# zadeklarowane, inaczej kolejny deploy znowu odetnie stronę (401).
+
+# Kalendarz na stronie; lib/api.ts woła to bez nagłówka Authorization.
+[functions.check-availability]
+verify_jwt = false
+
+# Formularz rezerwacji dla niezalogowanych gości.
+[functions.create-booking]
+verify_jwt = false
+
+# Subskrybowany przez Booking.com i Airbnb — nie wyślą żadnej autoryzacji.
+[functions.ical-feed]
+verify_jwt = false
+
+# sync-ical celowo pominięty: woła go cron z nagłówkiem
+# `Authorization: Bearer <service_role_key>`, który przechodzi verify_jwt,
+# a sama funkcja i tak weryfikuje ten nagłówek u siebie.

@@ -12,7 +12,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildOccupancySets } from "./availability.ts";
-import { expandStayRange, generateICal, parseICalEvents } from "./ical-parser.ts";
+import {
+  expandDateRange,
+  expandStayRange,
+  generateICal,
+  parseICalEvents,
+} from "./ical-parser.ts";
 
 const WINDOW = { from: "2026-08-20", to: "2026-09-20" };
 const empty = { pending: [], confirmed: [], blocked: [], ical: [], ...WINDOW };
@@ -137,16 +142,26 @@ test("ISO timestamps from the DB are normalized to dates", () => {
 
 test("outgoing feed extends DTEND so partners hold the cleaning day", () => {
   const ical = generateICal([
-    { id: "abc", check_in: "2026-09-01", check_out: "2026-09-08" },
+    { id: "abc", check_in: "2026-09-01", check_out: "2026-09-08", status: "confirmed" },
   ]);
   const [event] = parseICalEvents(ical);
 
   assert.equal(event.dtstart, "2026-09-01");
   assert.equal(event.dtend, "2026-09-09", "DTEND is exclusive, so +1 past cleaning");
+
+  // Round-trip: what a partner importing our feed marks unavailable has to be
+  // exactly the days we consider taken.
   assert.deepEqual(
+    expandDateRange(event.dtstart, event.dtend),
     expandStayRange("2026-09-01", "2026-09-08"),
-    // What a partner importing our feed will consider unavailable.
-    ["2026-09-01","2026-09-02","2026-09-03","2026-09-04",
-     "2026-09-05","2026-09-06","2026-09-07","2026-09-08"],
   );
+});
+
+test("feed keeps pending bookings tentative", () => {
+  const ical = generateICal([
+    { id: "abc", check_in: "2026-09-01", check_out: "2026-09-04", status: "pending" },
+  ]);
+
+  assert.match(ical, /STATUS:TENTATIVE/);
+  assert.match(ical, /DTEND;VALUE=DATE:20260905/);
 });
