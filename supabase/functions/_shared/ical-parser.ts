@@ -1,4 +1,4 @@
-import { normalizeDateOnly } from "./date.ts";
+import { addDaysStr, normalizeDateOnly } from "./date.ts";
 
 export interface ICalEvent {
   dtstart: string;
@@ -32,6 +32,18 @@ export function parseICalEvents(icalText: string): ICalEvent[] {
 
 function formatICalDate(raw: string): string {
   return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+}
+
+/**
+ * Every day a stay makes unavailable: all its nights *plus* the check-out day.
+ * The guest leaves in the morning but cleaning and turnaround take the rest of
+ * that day, so the next arrival can only be the day after check-out.
+ *
+ * `checkOut` here is the iCal DTEND / booking `check_out` — i.e. the exclusive
+ * end of the nights. This returns `[checkIn, checkOut]` inclusive.
+ */
+export function expandStayRange(checkIn: string, checkOut: string): string[] {
+  return expandDateRange(checkIn, addDaysStr(checkOut, 1));
 }
 
 /** Expand a [start, end) date range into individual YYYY-MM-DD strings. */
@@ -78,7 +90,7 @@ export async function fetchICalDates(
     const allDates: string[] = [];
 
     for (const ev of events) {
-      allDates.push(...expandDateRange(ev.dtstart, ev.dtend));
+      allDates.push(...expandStayRange(ev.dtstart, ev.dtend));
     }
 
     return filterDatesInRange(
@@ -105,8 +117,10 @@ export function generateICal(
   ];
 
   for (const b of bookings) {
-    const dtstart = b.check_in.replace(/-/g, "");
-    const dtend = b.check_out.replace(/-/g, "");
+    const dtstart = normalizeDateOnly(b.check_in).replace(/-/g, "");
+    // DTEND is exclusive, so push it one day past check-out: partners importing
+    // this feed must also keep the cleaning day free, not just the nights.
+    const dtend = addDaysStr(b.check_out, 1).replace(/-/g, "");
     lines.push(
       "BEGIN:VEVENT",
       `DTSTART;VALUE=DATE:${dtstart}`,

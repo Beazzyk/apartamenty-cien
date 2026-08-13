@@ -2,6 +2,13 @@
  * Stay pricing and iCal use calendar nights in YYYY-MM-DD.
  * Strips time/zone from ISO strings so we never do `iso + "T00:00:00Z"` (invalid).
  */
+/** Shift a YYYY-MM-DD date by whole days, staying in UTC. */
+export function addDaysStr(dateStr: string, days: number): string {
+  const d = new Date(normalizeDateOnly(dateStr) + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 export function normalizeDateOnly(input: string): string {
   const s = String(input).trim();
   if (!s) return s;

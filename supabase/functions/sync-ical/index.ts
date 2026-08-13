@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "../_shared/supabase.ts";
-import { parseICalEvents, expandDateRange } from "../_shared/ical-parser.ts";
+import { parseICalEvents, expandStayRange } from "../_shared/ical-parser.ts";
 import { log } from "../_shared/logger.ts";
 
 const FEEDS = [
@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
         const importedDates = new Map<string, string>();
         for (const ev of events) {
-          for (const d of expandDateRange(ev.dtstart, ev.dtend)) {
+          for (const d of expandStayRange(ev.dtstart, ev.dtend)) {
             if (d >= today && d <= futureStr) {
               importedDates.set(d, ev.summary);
             }

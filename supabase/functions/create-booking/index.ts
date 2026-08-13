@@ -2,7 +2,7 @@ import { supabaseAdmin } from "../_shared/supabase.ts";
 import { normalizeDateOnly } from "../_shared/date.ts";
 import { corsResponse, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { log } from "../_shared/logger.ts";
-import { expandDateRange } from "../_shared/ical-parser.ts";
+import { expandStayRange } from "../_shared/ical-parser.ts";
 import { fetchMergedExternalIcalDates } from "../_shared/external-ical.ts";
 import { fetchPricingFromDb } from "../_shared/pricing.ts";
 import { computeStayPriceBreakdown } from "../_shared/seasons.ts";
@@ -137,11 +137,31 @@ Deno.serve(async (req) => {
       3000,
     );
     if (icalBlocked.length > 0) {
-      const requestedDates = new Set(expandDateRange(checkInNorm, checkOutNorm));
+      // Includes our own check-out day: it goes to cleaning, so it may not
+      // collide with anyone else's stay either.
+      const requestedDates = new Set(expandStayRange(checkInNorm, checkOutNorm));
       const conflict = icalBlocked.find((d) => requestedDates.has(d));
       if (conflict) {
         return errorResponse("Wybrane daty są już zajęte. Proszę wybrać inny termin.", req, 409);
       }
+    }
+
+    // --- Cleaning-day check against existing bookings ---
+    // The DB's no_overlapping_bookings constraint uses '[)', so it only stops
+    // two guests sharing a *night*. It would happily accept an arrival on the
+    // day someone else departs — which we reserve for cleaning. Stays occupy
+    // [check_in, check_out] inclusive, so they clash when the ranges touch.
+    const { data: touching, error: touchingError } = await supabaseAdmin
+      .from("bookings")
+      .select("id")
+      .in("status", ["pending", "confirmed"])
+      .lte("check_in", checkOutNorm)
+      .gte("check_out", checkInNorm)
+      .limit(1);
+
+    if (touchingError) throw touchingError;
+    if ((touching ?? []).length > 0) {
+      return errorResponse("Wybrane daty są już zajęte. Proszę wybrać inny termin.", req, 409);
     }
 
     // --- Season: price from settings (min. nights are advisory; host accepts short stays case-by-case) ---
