@@ -3,6 +3,7 @@ import AvailabilityCalendar from './AvailabilityCalendar';
 import { createBooking } from '../lib/api';
 import { useTranslation } from '../context/LanguageContext';
 import { BOOKING_COM_LISTING_URL } from '../lib/constants';
+import { eachDayInclusive } from '../lib/date';
 import {
   computeStayPriceBreakdown,
   DEFAULT_SEASON_PRICING,
@@ -30,6 +31,7 @@ const BookingSection: React.FC = () => {
   const [guestPostalCode, setGuestPostalCode] = useState('');
   const [guestCity, setGuestCity] = useState('');
   const [seasonPricing, setSeasonPricing] = useState<SeasonPricing | null>(null);
+  const [unbookableGapDates, setUnbookableGapDates] = useState<string[]>([]);
   const [status, setStatus] = useState<BookingStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [submittedDates, setSubmittedDates] = useState<{ checkIn: string; checkOut: string } | null>(null);
@@ -57,7 +59,19 @@ const BookingSection: React.FC = () => {
   const minNights = seasonConfig ? seasonConfig.minNights : 3;
   const meetsMinNights = nights === 0 || nights >= minNights;
 
-  const canProceed = Boolean(checkIn && checkOut && nights >= 1);
+  /**
+   * Wolna luka między rezerwacjami, za krótka na minimum nocy: dni zostają
+   * zielone (właściciel chce widzieć takie okna), ale zapytania stąd nie da
+   * się zrealizować — więc formularz go nie wysyła.
+   */
+  const staysInsideUnbookableGap =
+    checkIn !== null &&
+    checkOut !== null &&
+    unbookableGapDates.length > 0 &&
+    eachDayInclusive(checkIn, checkOut).some(d => unbookableGapDates.includes(d));
+  const blockedByGap = staysInsideUnbookableGap && !meetsMinNights;
+
+  const canProceed = Boolean(checkIn && checkOut && nights >= 1) && !blockedByGap;
 
   const canSubmit =
     canProceed &&
@@ -219,12 +233,18 @@ const BookingSection: React.FC = () => {
         </div>
       ) : null}
       {!meetsMinNights && (
-        <div className="mt-3 flex items-start gap-2 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        <div
+          className={`mt-3 flex items-start gap-2 text-xs font-medium rounded-lg px-3 py-2 ${
+            blockedByGap
+              ? 'text-red-800 bg-red-50 border border-red-200'
+              : 'text-amber-800 bg-amber-50 border border-amber-200'
+          }`}
+        >
           <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <span>
-            {b.minNightsBelowNote
+            {(blockedByGap ? b.minNightsGapBlockNote : b.minNightsBelowNote)
               .replace('{{MIN}}', String(minNights))
               .replace('{{NIGHTS}}', nightsPL(minNights))}
           </span>
@@ -259,6 +279,7 @@ const BookingSection: React.FC = () => {
                     checkOut={checkOut}
                     onRangeChange={handleRangeChange}
                     onPricingUpdate={setSeasonPricing}
+                    onUnbookableGapUpdate={setUnbookableGapDates}
                   />
 
                   {dateChips}

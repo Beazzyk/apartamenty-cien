@@ -16,6 +16,12 @@ export interface AvailabilityResponse {
   pending_dates: string[];
   confirmed_dates: string[];
   blocked_dates: string[];
+  /**
+   * Dni faktycznie wolne, ale zamknięte w luce między rezerwacjami krótszej
+   * niż minimum nocy — kalendarz pokazuje je na zielono (właściciel chce je
+   * widzieć), formularz nie przepuszcza pobytu, który w nie wpada.
+   */
+  unbookable_gap_dates: string[];
   /** Cena „od …” (poza sezonem) — kompatybilność wsteczna. */
   price_per_night: number;
   /** Pełny zestaw stawek z bazy (create-booking używa tych samych kluczy). */
@@ -58,6 +64,7 @@ export async function checkAvailability(
       pending_dates: [],
       confirmed_dates: [],
       blocked_dates: [],
+      unbookable_gap_dates: [],
       price_per_night: DEFAULT_SEASON_PRICING.price_per_night_offseason,
       pricing: { ...DEFAULT_SEASON_PRICING },
     };
@@ -74,6 +81,8 @@ export async function checkAvailability(
   return {
     ...data,
     pricing,
+    // Starsze wdrożenie check-availability tego pola nie zwraca.
+    unbookable_gap_dates: data.unbookable_gap_dates ?? [],
     price_per_night:
       data.price_per_night ?? pricing.price_per_night_offseason,
   };

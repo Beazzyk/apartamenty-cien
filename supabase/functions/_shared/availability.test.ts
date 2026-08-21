@@ -11,7 +11,8 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildOccupancySets } from "./availability.ts";
+import { buildOccupancySets, findUnbookableGapDates } from "./availability.ts";
+import { DEFAULT_SEASON_PRICING } from "./pricing.ts";
 import {
   expandDateRange,
   expandStayRange,
@@ -190,4 +191,46 @@ test("feed keeps pending bookings tentative", () => {
 
   assert.match(ical, /STATUS:TENTATIVE/);
   assert.match(ical, /DTEND;VALUE=DATE:20260905/);
+});
+
+// --- Unbookably short gaps between two stays -------------------------------
+// These days stay free (the host wants to see the window), so they must NOT
+// end up in blocked_dates — check-availability reports them separately and
+// only the booking form refuses them.
+
+function occupancyOf(...stays: Array<[string, string]>): Set<string> {
+  const occupied = new Set<string>();
+  for (const [ci, co] of stays) {
+    for (const d of expandStayRange(ci, co)) occupied.add(d);
+  }
+  return occupied;
+}
+
+test("a 3-day gap in peak season (min 4 nights) is unbookable", () => {
+  // 1–8 Sep and 12–16 Sep leave 9, 10 and 11 free: at most 2 nights.
+  const all = expandDateRange("2026-08-25", "2026-09-25");
+  const occupied = occupancyOf(["2026-09-01", "2026-09-08"], ["2026-09-12", "2026-09-16"]);
+
+  const gap = findUnbookableGapDates(all, occupied, DEFAULT_SEASON_PRICING);
+
+  assert.deepEqual([...gap].sort(), ["2026-09-09", "2026-09-10", "2026-09-11"]);
+});
+
+test("a gap as long as the min-stay is still one night short", () => {
+  // A run of N free days fits at most N-1 nights — the last one is the
+  // check-out/cleaning day. So 4 free days (3 nights) fall short of the peak
+  // minimum of 4, while 5 free days (4 nights) just make it.
+  const all = expandDateRange("2026-08-25", "2026-09-25");
+  const fourFree = occupancyOf(["2026-09-01", "2026-09-08"], ["2026-09-13", "2026-09-16"]);
+  const fiveFree = occupancyOf(["2026-09-01", "2026-09-08"], ["2026-09-14", "2026-09-16"]);
+
+  assert.equal(findUnbookableGapDates(all, fourFree, DEFAULT_SEASON_PRICING).size, 4);
+  assert.equal(findUnbookableGapDates(all, fiveFree, DEFAULT_SEASON_PRICING).size, 0);
+});
+
+test("an open-ended stretch after a stay is left alone", () => {
+  const all = expandDateRange("2026-08-25", "2026-09-25");
+  const occupied = occupancyOf(["2026-09-01", "2026-09-08"]);
+
+  assert.equal(findUnbookableGapDates(all, occupied, DEFAULT_SEASON_PRICING).size, 0);
 });

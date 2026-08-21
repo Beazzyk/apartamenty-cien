@@ -88,14 +88,17 @@ Deno.serve(async (req) => {
     const inRange = (d: string) => d >= fromN && d <= toN;
     const pendingSet   = new Set([...extPendingSet].filter(inRange));
     const confirmedSet = new Set([...extConfirmedSet].filter(inRange));
-    const blockedSet   = new Set(
-      [...extBlockedSet, ...gapBlocked].filter(inRange),
-    );
+    const blockedSet   = new Set([...extBlockedSet].filter(inRange));
+    // Deliberately *not* merged into blockedSet: these days really are free
+    // and the host wants to see them as such. They're reported separately so
+    // the booking form can refuse a stay that lands in one.
+    const gapSet       = new Set([...gapBlocked].filter(inRange));
 
     return jsonResponse({
       pending_dates:   [...pendingSet].sort(),
       confirmed_dates: [...confirmedSet].sort(),
       blocked_dates:   [...blockedSet].sort(),
+      unbookable_gap_dates: [...gapSet].sort(),
       price_per_night: pricing.price_per_night_offseason,
       pricing,
     }, req);

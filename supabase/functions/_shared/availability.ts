@@ -60,10 +60,14 @@ function minNightsForTier(tier: Season, pricing: SeasonPricing): number {
 
 /**
  * A free gap fully sandwiched between two occupied stretches that's shorter
- * than the min-stay for its season can never actually be booked by anyone —
- * showing it as plain "available" is misleading and (aesthetically) leaves
- * odd single free-looking days next to solid booked blocks. Mark those days
- * as unavailable too, same as the response's `blocked_dates`.
+ * than the min-stay for its season can never actually be filled by a guest.
+ *
+ * These days stay *free*, though — the host wants to see them on the calendar
+ * (they're the windows for maintenance, cleaning, their own use), so
+ * check-availability reports them in their own `unbookable_gap_dates` field
+ * rather than folding them into `blocked_dates`. The calendar keeps painting
+ * them green; only the booking form refuses to submit a stay landing there,
+ * on the season's min-nights rule.
  *
  * Only gaps fully bounded by occupied days *within* `allDates` are judged —
  * gaps touching either edge are left alone since we can't see far enough
@@ -87,9 +91,12 @@ export function findUnbookableGapDates(
     const isEnclosed = i > 0 && runEnd < allDates.length - 1;
     if (isEnclosed) {
       const runLength = runEnd - i + 1;
+      // A stay filling the run arrives on its first day and checks out on its
+      // last (which goes to cleaning), so it's one night shorter than the run.
+      const bookableNights = runLength - 1;
       const tier = getPriceTierForNight(allDates[i]);
       const minNights = minNightsForTier(tier, pricing);
-      if (runLength < minNights) {
+      if (bookableNights < minNights) {
         for (let k = i; k <= runEnd; k++) result.add(allDates[k]);
       }
     }

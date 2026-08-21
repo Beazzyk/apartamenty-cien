@@ -10,3 +10,18 @@ export function normalizeDateOnly(input: string): string {
   if (!Number.isNaN(t)) return new Date(t).toISOString().slice(0, 10);
   return s;
 }
+
+/**
+ * Każdy dzień pobytu od przyjazdu do wyjazdu włącznie — dzień wyjazdu też
+ * jest zajęty (sprzątanie), tak samo jak `expandStayRange` w Edge Functions.
+ */
+export function eachDayInclusive(from: string, to: string): string[] {
+  const days: string[] = [];
+  const cursor = new Date(normalizeDateOnly(from) + 'T00:00:00Z');
+  const end = new Date(normalizeDateOnly(to) + 'T00:00:00Z');
+  while (cursor <= end) {
+    days.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return days;
+}

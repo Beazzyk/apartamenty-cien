@@ -148,6 +148,8 @@ const pl = {
     recommendedMinStay: 'min.',
     minNightsBelowNote:
       'Dla tego terminu: minimum {{MIN}} {{NIGHTS}}. Krócej — też wyślij zapytanie, odpiszemy.',
+    minNightsGapBlockNote:
+      'Ta wolna przerwa między rezerwacjami jest krótsza niż minimum {{MIN}} {{NIGHTS}} — nie da się jej wypełnić pobytem. Wybierz inny termin lub napisz do nas.',
     rulesLabel: 'Zasady pobytu',
     ruleHours: 'Doba hotelowa: zameldowanie od 14:00, wymeldowanie do 12:00',
     ruleNoSmoking: 'Zakaz palenia',
@@ -386,6 +388,8 @@ const cz: typeof pl = {
     recommendedMinStay: 'min.',
     minNightsBelowNote:
       'Pro tento termín: minimálně {{MIN}} {{NIGHTS}}. Kratší pobyt můžete také poslat — ozveme se.',
+    minNightsGapBlockNote:
+      'Tato volná mezera mezi rezervacemi je kratší než minimum {{MIN}} {{NIGHTS}} — pobytem ji nelze vyplnit. Vyberte jiný termín nebo nám napište.',
     rulesLabel: 'Podmínky pobytu',
     ruleHours: 'Check-in od 14:00, check-out do 12:00',
     ruleNoSmoking: 'Zákaz kouření',
@@ -624,6 +628,8 @@ const de: typeof pl = {
     recommendedMinStay: 'mind.',
     minNightsBelowNote:
       'Für diesen Zeitraum: mind. {{MIN}} {{NIGHTS}}. Kürzer — Anfrage trotzdem möglich, wir melden uns.',
+    minNightsGapBlockNote:
+      'Diese freie Lücke zwischen zwei Buchungen ist kürzer als die Mindestdauer von {{MIN}} {{NIGHTS}} — ein Aufenthalt passt hier nicht hinein. Bitte wählen Sie einen anderen Zeitraum oder schreiben Sie uns.',
     rulesLabel: 'Aufenthaltsbedingungen',
     ruleHours: 'Check-in ab 14:00, Check-out bis 12:00 Uhr',
     ruleNoSmoking: 'Rauchverbot',
@@ -862,6 +868,8 @@ const en: typeof pl = {
     recommendedMinStay: 'min.',
     minNightsBelowNote:
       'For these dates: min. {{MIN}} {{NIGHTS}}. Shorter — send an enquiry anyway, we’ll reply.',
+    minNightsGapBlockNote:
+      'This free gap between bookings is shorter than the minimum of {{MIN}} {{NIGHTS}} — no stay fits in it. Please pick other dates or get in touch.',
     rulesLabel: 'House rules',
     ruleHours: 'Check-in from 14:00, check-out by 12:00',
     ruleNoSmoking: 'No smoking',

@@ -11,6 +11,11 @@ interface Props {
   onRangeChange: (from: string | null, to: string | null) => void;
   /** Stawki z API / bazy — używane do wyświetlania „od …” i kalkulacji w formularzu. */
   onPricingUpdate: (pricing: SeasonPricing) => void;
+  /**
+   * Dni wolne, ale zamknięte w zbyt krótkiej luce między rezerwacjami.
+   * Zostają zielone i klikalne — to formularz odmawia wysyłki (min. nocy).
+   */
+  onUnbookableGapUpdate: (dates: string[]) => void;
 }
 
 function toDateStr(d: Date): string {
@@ -32,12 +37,17 @@ function sameDay(a: Date, b: Date): boolean {
     a.getDate() === b.getDate();
 }
 
-const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChange, onPricingUpdate }) => {
+const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChange, onPricingUpdate, onUnbookableGapUpdate }) => {
   const today = useRef((() => { const d = new Date(); d.setHours(0,0,0,0); return d; })());
 
   const [pendingDates, setPendingDates]     = useState<Date[]>([]);
   const [confirmedDates, setConfirmedDates] = useState<Date[]>([]);
   const [blockedDates, setBlockedDates]     = useState<Date[]>([]);
+  /**
+   * Zbierane per miesiąc, nie nadpisywane — zaznaczenie może przechodzić
+   * przez granicę miesiąca, a formularz musi znać luki z obu stron.
+   */
+  const [gapDatesByMonth, setGapDatesByMonth] = useState<Record<string, string[]>>({});
   const [loading, setLoading]               = useState(false);
   const [pricePerNight, setPricePerNight]   = useState(DEFAULT_SEASON_PRICING.price_per_night_offseason);
   const [displayMonth, setDisplayMonth]     = useState(today.current);
@@ -55,6 +65,7 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
       setPendingDates(data.pending_dates.map(parseDate));
       setConfirmedDates(data.confirmed_dates.map(parseDate));
       setBlockedDates(data.blocked_dates.map(parseDate));
+      setGapDatesByMonth(prev => ({ ...prev, [from.slice(0, 7)]: data.unbookable_gap_dates }));
       const p = data.pricing ?? DEFAULT_SEASON_PRICING;
       setPricePerNight(data.price_per_night ?? p.price_per_night_offseason);
       onPricingUpdate(p);
@@ -68,6 +79,10 @@ const AvailabilityCalendar: React.FC<Props> = ({ checkIn, checkOut, onRangeChang
   useEffect(() => {
     fetchData(displayMonth);
   }, [displayMonth, fetchData]);
+
+  useEffect(() => {
+    onUnbookableGapUpdate(Object.values(gapDatesByMonth).flat());
+  }, [gapDatesByMonth, onUnbookableGapUpdate]);
 
   const allUnavailable = [...pendingDates, ...confirmedDates, ...blockedDates];
 

@@ -1,0 +1,26 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.110.6"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.110.6": "c7330c52c7c1b6215fd602626401ab0ff93bc7a7b75c77ffa80497de1a1733ee"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@types/node@^22.14.0",
+        "npm:@vitejs/plugin-react@5",
+        "npm:autoprefixer@^10.4.27",
+        "npm:postcss@^8.5.8",
+        "npm:react-day-picker@^9.13.2",
+        "npm:react-dom@^19.2.4",
+        "npm:react-router-dom@^7.13.1",
+        "npm:react@^19.2.4",
+        "npm:tailwindcss@^3.4.19",
+        "npm:typescript@~5.8.2",
+        "npm:vite@^6.2.0"
+      ]
+    }
+  }
+}
