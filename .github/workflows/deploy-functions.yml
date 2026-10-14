@@ -28,3 +28,5 @@ jobs:
           supabase functions deploy check-availability --project-ref wjskjpxxjbrclqugnqax --no-verify-jwt
           supabase functions deploy ical-feed          --project-ref wjskjpxxjbrclqugnqax --no-verify-jwt
           supabase functions deploy manage-booking     --project-ref wjskjpxxjbrclqugnqax --no-verify-jwt
+          # sync-ical keeps verify_jwt: only the cron (service-role bearer) may call it.
+          supabase functions deploy sync-ical          --project-ref wjskjpxxjbrclqugnqax

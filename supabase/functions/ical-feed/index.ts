@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "../_shared/supabase.ts";
 import { log } from "../_shared/logger.ts";
-import { generateICal } from "../_shared/ical-parser.ts";
+import { generateICal, TURNOVER_SUMMARY } from "../_shared/ical-parser.ts";
 
 Deno.serve(async () => {
   try {
@@ -16,7 +16,19 @@ Deno.serve(async () => {
 
     if (error) throw error;
 
-    const ical = generateICal(bookings ?? []);
+    // Booking.com sells its own check-out days; send them back closed for cleaning.
+    // Read from the cron-synced table so a failed fetch never reopens those days.
+    const { data: cleaning, error: cleaningError } = await supabaseAdmin
+      .from("blocked_dates")
+      .select("date")
+      .eq("source", "booking_import")
+      .eq("summary", TURNOVER_SUMMARY)
+      .gte("date", today)
+      .order("date", { ascending: true });
+
+    if (cleaningError) throw cleaningError;
+
+    const ical = generateICal(bookings ?? [], (cleaning ?? []).map((r) => r.date));
 
     return new Response(ical, {
       status: 200,

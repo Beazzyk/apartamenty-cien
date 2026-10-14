@@ -18,6 +18,7 @@ import {
   expandStayRange,
   generateICal,
   parseICalEvents,
+  turnoverDays,
 } from "./ical-parser.ts";
 
 const WINDOW = { from: "2026-08-20", to: "2026-09-20" };
@@ -182,6 +183,29 @@ test("folding is reversible and keeps Polish characters intact", () => {
     unfolded,
     /DESCRIPTION:Rezerwacja potwierdzona - szczegóły tylko w panelu rezerwacji\./,
   );
+});
+
+test("turnover days are imported check-outs that no imported stay covers", () => {
+  // Shape of the real Booking.com export, incl. the 2.01 same-day turnover.
+  const events = [
+    { dtstart: "2026-12-28", dtend: "2027-01-02", summary: "CLOSED - Not available" },
+    { dtstart: "2027-01-02", dtend: "2027-01-09", summary: "CLOSED - Not available" },
+    { dtstart: "2027-01-11", dtend: "2027-01-17", summary: "CLOSED - Not available" },
+    { dtstart: "2027-01-18", dtend: "2027-01-24", summary: "CLOSED - Not available" },
+  ];
+
+  // 2.01 is already a night of the next stay; 17.01 sits between two stays and
+  // must still be closed even though both blocked ranges touch it.
+  assert.deepEqual(turnoverDays(events), ["2027-01-09", "2027-01-17", "2027-01-24"]);
+});
+
+test("feed publishes cleaning days as single closed days", () => {
+  const ical = generateICal([], ["2027-01-09"]);
+  const [event] = parseICalEvents(ical);
+
+  assert.equal(event.dtstart, "2027-01-09");
+  assert.equal(event.dtend, "2027-01-10");
+  assert.match(ical, /UID:cleaning-2027-01-09@cienduchgor/);
 });
 
 test("feed keeps pending bookings tentative", () => {

@@ -1,5 +1,10 @@
 import { supabaseAdmin } from "../_shared/supabase.ts";
-import { parseICalEvents, expandStayRange } from "../_shared/ical-parser.ts";
+import {
+  parseICalEvents,
+  expandStayRange,
+  turnoverDays,
+  TURNOVER_SUMMARY,
+} from "../_shared/ical-parser.ts";
 import { log } from "../_shared/logger.ts";
 
 const FEEDS = [
@@ -61,6 +66,10 @@ Deno.serve(async (req) => {
               importedDates.set(d, ev.summary);
             }
           }
+        }
+        // ical-feed finds the cleaning days to publish back by this summary.
+        for (const d of turnoverDays(events)) {
+          if (importedDates.has(d)) importedDates.set(d, TURNOVER_SUMMARY);
         }
 
         await supabaseAdmin.from("blocked_dates").delete().eq("source", source);

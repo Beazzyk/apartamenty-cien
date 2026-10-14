@@ -46,6 +46,20 @@ export function expandStayRange(checkIn: string, checkOut: string): string[] {
   return expandDateRange(checkIn, addDaysStr(checkOut, 1));
 }
 
+/**
+ * Check-out days of imported stays that no imported stay occupies as a night.
+ * Booking.com treats its own check-out days as free arrival days, so we send
+ * these back as closed days — otherwise it sells a same-day turnover.
+ */
+export function turnoverDays(events: ICalEvent[]): string[] {
+  const nights = new Set<string>();
+  for (const ev of events) {
+    for (const d of expandDateRange(ev.dtstart, ev.dtend)) nights.add(d);
+  }
+  const days = new Set(events.map((ev) => ev.dtend).filter((d) => !nights.has(d)));
+  return [...days].sort();
+}
+
 /** Expand a [start, end) date range into individual YYYY-MM-DD strings. */
 export function expandDateRange(start: string, end: string): string[] {
   const s = normalizeDateOnly(start);
@@ -156,8 +170,18 @@ function utcDtStamp(): string {
   return `${compact.replace(/Z+$/i, "")}Z`;
 }
 
-/** Generate the VCALENDAR we publish for Booking.com / Airbnb to subscribe to. */
-export function generateICal(bookings: FeedBooking[]): string {
+/**
+ * `blocked_dates.summary` marking an imported check-out day (see `turnoverDays`).
+ * sync-ical writes it, ical-feed reads it back to publish the cleaning day.
+ */
+export const TURNOVER_SUMMARY = "Sprzątanie po rezerwacji";
+
+/**
+ * Generate the VCALENDAR we publish for Booking.com / Airbnb to subscribe to.
+ * `cleaningDays` are single closed days after stays imported from the partner
+ * itself — safe only because Booking.com's export does not echo imported events.
+ */
+export function generateICal(bookings: FeedBooking[], cleaningDays: string[] = []): string {
   const dtStamp = utcDtStamp();
 
   // All-day events: DTSTART/DTEND use VALUE=DATE only (no TZID). CALSCALE early — some OTA importers expect it.
@@ -199,6 +223,22 @@ export function generateICal(bookings: FeedBooking[]): string {
       `SUMMARY:${icalEsc(summary)}`,
       `DESCRIPTION:${icalEsc(description)}`,
       `STATUS:${icalStatus}`,
+      `TRANSP:OPAQUE`,
+      "END:VEVENT",
+    );
+  }
+
+  for (const day of cleaningDays) {
+    const d = normalizeDateOnly(day);
+    lines.push(
+      "BEGIN:VEVENT",
+      `DTSTAMP:${dtStamp}`,
+      `UID:cleaning-${d}@cienduchgor`,
+      `SEQUENCE:0`,
+      `DTSTART;VALUE=DATE:${d.replace(/-/g, "")}`,
+      `DTEND;VALUE=DATE:${addDaysStr(d, 1).replace(/-/g, "")}`,
+      `SUMMARY:${icalEsc("Apartament - dzień sprzątania")}`,
+      `STATUS:CONFIRMED`,
       `TRANSP:OPAQUE`,
       "END:VEVENT",
     );
