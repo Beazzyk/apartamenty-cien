@@ -1,6 +1,9 @@
 import React from 'react';
 import { useTranslation } from '../context/LanguageContext';
 
+// Strefa SPA (masaże) tymczasowo wyłączona – usługa nie jest obecnie świadczona.
+const SPA_ENABLED = false;
+
 const Amenities: React.FC = () => {
   const { t } = useTranslation();
   const { categories, massages, heading, massageNote, spaTitle } = t.amenities;
@@ -27,12 +30,16 @@ const Amenities: React.FC = () => {
         </div>
 
         {/* Nagłówek Strefy SPA – nad sekcją z zdjęciem i masażami */}
+        {SPA_ENABLED && (
         <div className="mt-20 pt-16 border-t border-cappuccino/20 scroll-reveal text-center">
           <h2 className="font-serif text-3xl text-deep-brown mb-2">{spaTitle}</h2>
           <p className="text-deep-brown/70 font-light">{massageNote}</p>
         </div>
+        )}
       </div>
 
+      {SPA_ENABLED && (
+      <>
       {/* Sekcja masaży: desktop – zdjęcie po lewej (1/3); mobile – zdjęcie na górze pełną szerokością (mniej przycięcia) */}
       <div className="relative py-8 sm:py-12 md:py-24 lg:py-32 overflow-hidden bg-paper-white">
         {/* Mobile: tylko zdjęcie edge-to-edge w ramce (cover — brak pasków), niska wysokość dzięki proporcjom 16/9 */}
@@ -76,6 +83,8 @@ const Amenities: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
     </section>
   );
 };
